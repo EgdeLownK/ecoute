@@ -1,0 +1,1507 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d0f12">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Écoute">
+<title>Écoute &amp; Résumé</title>
+<link rel="icon" href="data:,">
+<style>
+:root{--bg:#0d0f12;--panel:#15191e;--panel2:#1c2128;--line:#262c34;--text:#e8ebef;--muted:#8b94a0;--accent:#3ecf9a;--accent-ink:#04130d;--warn:#f0b54a;--danger:#ef6b6b;--r:18px;--nav:272px;color-scheme:dark}
+@media (prefers-color-scheme:light){:root{--bg:#f3f4f6;--panel:#fff;--panel2:#f1f3f6;--line:#e2e5ea;--text:#121518;--muted:#5f6873;--accent:#10966a;--accent-ink:#fff;--warn:#b7791f;--danger:#d03b3b;color-scheme:light}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:inherit}
+svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+[hidden]{display:none!important}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--c,var(--accent));flex:none}
+
+/* navigation */
+.nav{position:fixed;top:0;bottom:0;left:0;width:var(--nav);background:var(--panel);border-right:1px solid var(--line);z-index:40;display:flex;flex-direction:column;gap:2px;padding:calc(14px + env(safe-area-inset-top)) 12px calc(14px + env(safe-area-inset-bottom));transform:translateX(-102%);transition:transform .22s ease;overflow-y:auto}
+.nav.open{transform:none;box-shadow:0 0 40px rgba(0,0,0,.35)}
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:39;opacity:0;pointer-events:none;transition:opacity .2s}
+.scrim.on{opacity:1;pointer-events:auto}
+.nav .logo{padding:4px 8px 14px}
+.nav-i{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:11px;text-decoration:none;font-weight:550;border:0;background:transparent;width:100%;text-align:left;color:var(--text)}
+.nav-i:hover{background:var(--panel2)}
+.nav-i.on{background:var(--panel2);box-shadow:inset 3px 0 0 var(--c,var(--accent))}
+.nav-i .n{margin-left:auto;font-size:12px;color:var(--muted);font-weight:500}
+.nav-i svg{color:var(--muted)}
+.nav-sec{display:flex;align-items:center;justify-content:space-between;padding:16px 10px 6px;font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
+.nav-sec button{border:0;background:transparent;color:var(--muted);padding:4px;border-radius:8px;display:grid}
+.nav-sec button:hover{color:var(--text);background:var(--panel2)}
+.nav-foot{margin-top:auto;padding-top:14px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:2px}
+.nav-foot .store{font-size:12px;color:var(--muted);padding:6px 10px;display:flex;gap:8px;align-items:center}
+.nav-foot .store svg{width:15px;height:15px}
+@media(min-width:1000px){body{padding-left:var(--nav)}.nav{transform:none}.scrim{display:none}.actionbar{left:var(--nav)!important}#btnMenu{display:none}}
+
+/* en-tête */
+.top{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--bg) 85%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);padding:calc(10px + env(safe-area-inset-top)) 16px 10px;border-bottom:1px solid var(--line)}
+.top .in{max-width:760px;margin:0 auto;display:flex;align-items:center;gap:10px}
+.logo{display:flex;align-items:center;gap:9px;font-weight:700;letter-spacing:-.01em}
+.logo i{width:26px;height:26px;border-radius:8px;background:var(--accent);display:grid;place-items:center;color:var(--accent-ink)}
+.logo i svg{width:16px;height:16px;stroke-width:2.2}
+.ttl{margin-right:auto;font-weight:650;display:flex;align-items:center;gap:8px;min-width:0}
+.ttl span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.icon-btn{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--panel);display:grid;place-items:center;flex:none}
+.pill{display:inline-flex;align-items:center;gap:7px;padding:5px 11px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.pill .d{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.pill.on .d{background:var(--danger);animation:blink 1.2s infinite}
+.pill.warn .d{background:var(--warn)}
+@keyframes blink{50%{opacity:.3}}
+
+main{max-width:760px;margin:0 auto;padding:16px 16px calc(24px + env(safe-area-inset-bottom))}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:14px}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.h{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600;margin:0 0 10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:9px 14px;font-weight:550;white-space:nowrap;min-height:40px;text-decoration:none}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.btn.ghost{background:transparent}
+.btn.sm{min-height:32px;padding:5px 10px;font-size:13px;border-radius:10px}
+.btn.sm svg{width:16px;height:16px}
+.btn.danger{color:var(--danger)}
+.btn:disabled{opacity:.5;cursor:default}
+.grow{flex:1;min-width:0}
+.lbl{font-size:12px;color:var(--muted)}
+.val{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* accueil */
+.cats{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 8px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.cats::-webkit-scrollbar{display:none}
+.cat{flex:none;display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel);font-weight:550}
+.cat.on{border-color:var(--c);background:color-mix(in srgb,var(--c) 16%,var(--panel))}
+.cat.add{color:var(--muted);padding:8px 11px}
+.cat.add svg{width:16px;height:16px}
+.hero{display:flex;flex-direction:column;align-items:center;padding:22px 0 26px}
+.go{position:relative;width:min(56vw,196px);aspect-ratio:1;border-radius:50%;border:0;color:#06120d;font-size:clamp(42px,12vw,58px);font-weight:800;letter-spacing:.05em;
+  background:radial-gradient(circle at 32% 26%,color-mix(in srgb,var(--c) 55%,#fff) 0%,var(--c) 48%,color-mix(in srgb,var(--c) 72%,#000) 100%);
+  box-shadow:0 14px 44px color-mix(in srgb,var(--c) 38%,transparent),inset 0 -8px 20px rgba(0,0,0,.18);transition:transform .15s}
+.go:active{transform:scale(.95)}
+.go::before,.go::after{content:"";position:absolute;inset:-12px;border-radius:50%;border:2px solid color-mix(in srgb,var(--c) 40%,transparent);animation:ring 2.6s ease-out infinite;pointer-events:none}
+.go::after{animation-delay:1.3s}
+@keyframes ring{0%{transform:scale(.9);opacity:1}100%{transform:scale(1.22);opacity:0}}
+.hero .dest{margin-top:22px;text-align:center;font-size:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center}
+.hero .dest b{font-weight:650}
+.segctl{display:grid;grid-template-columns:1fr 1fr;background:var(--panel2);border-radius:12px;padding:4px;margin:0 0 4px;border:1px solid var(--line)}
+.segctl button{border:0;background:transparent;border-radius:9px;padding:8px 6px;font-size:14px;font-weight:550;color:var(--muted)}
+.segctl button.on{background:var(--panel);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.18)}
+.explain{font-size:13px;color:var(--muted);margin:10px 0 0}
+.list{display:flex;flex-direction:column;gap:2px;max-height:300px;overflow:auto;margin-top:10px;overscroll-behavior:contain}
+.row{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:1px solid transparent;background:transparent;border-radius:12px;padding:9px 10px}
+.row:hover{background:var(--panel2)}
+.row.sel{border-color:color-mix(in srgb,var(--accent) 60%,var(--line));background:color-mix(in srgb,var(--accent) 10%,var(--panel))}
+.row .t{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .m{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row > svg{color:var(--muted)}
+.row.sel > svg{color:var(--accent)}
+.row .eye{padding:5px;border-radius:8px;color:var(--muted);display:grid}
+.row .eye:hover{color:var(--text);background:var(--panel2)}
+.dest-row{display:flex;align-items:center;gap:12px}
+.dest-row .ico{width:44px;height:44px;border-radius:12px;background:var(--panel2);display:grid;place-items:center;color:var(--accent)}
+.tree{font:12.5px/1.65 ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:12px;white-space:pre;overflow-x:auto;color:var(--muted)}
+.tree b{color:var(--text);font-weight:600}
+.tree i{font-style:normal;color:var(--accent)}
+
+/* documents */
+.doc header{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px}
+.doc header b{font-size:16px}
+.clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:3px 9px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.chip svg{width:13px;height:13px}
+.topics{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.topic{display:flex;align-items:center;gap:12px;padding:9px 10px;border-radius:12px;cursor:pointer}
+.topic:hover{background:var(--panel2)}
+.num{min-width:26px;height:26px;padding:0 5px;border-radius:8px;background:var(--panel2);display:grid;place-items:center;font-size:12px;font-weight:700;flex:none;border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.tt{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tm{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.st{font-size:12px;padding:2px 8px;border-radius:999px;white-space:nowrap;border:1px solid var(--line);color:var(--muted)}
+.st.saved{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+.st.open{color:var(--danger);border-color:color-mix(in srgb,var(--danger) 45%,var(--line))}
+.st.summarizing{color:var(--warn)}
+.st.error{color:var(--danger)}
+.doc footer{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+.empty{color:var(--muted);text-align:center;padding:14px 0;font-size:14px}
+.cat-head{display:flex;align-items:center;gap:12px;margin:4px 0 18px}
+.cat-head h1{margin:0;font-size:24px;letter-spacing:-.015em}
+.cat-head .dot{width:14px;height:14px}
+.sec-h{display:flex;align-items:center;justify-content:space-between;margin:22px 4px 10px}
+.sec-h .h{margin:0}
+
+/* vue écoute */
+.now .kicker{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);flex-wrap:wrap}
+.now h2{margin:8px 0 4px;font-size:22px;letter-spacing:-.01em;line-height:1.25}
+.lines{display:flex;flex-direction:column;gap:6px;margin-top:12px;max-height:42vh;overflow:auto;overscroll-behavior:contain}
+.ln{display:flex;gap:10px}
+.ln time{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;padding-top:2px;flex:none}
+.ln p{margin:0}
+.ln.rej{opacity:.5}.ln.rej p{text-decoration:line-through;text-decoration-color:var(--warn)}
+.ln.rej em{font-size:12px;color:var(--warn);font-style:normal}
+.interim{min-height:1.4em;color:var(--muted);font-style:italic;margin-top:8px}
+.meter{display:flex;align-items:center;gap:12px}
+.vad{font-size:12px;font-weight:650;padding:3px 10px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);white-space:nowrap}
+.vad.voice{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 50%,var(--line))}
+.vad.noise{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 50%,var(--line))}
+canvas{flex:1;min-width:0;height:44px;display:block;border-radius:10px;background:var(--panel2)}
+.vadstats{font-size:12px;color:var(--muted);margin-top:8px}
+.actionbar{position:fixed;left:0;right:0;bottom:0;z-index:9;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:color-mix(in srgb,var(--bg) 88%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-top:1px solid var(--line)}
+.actionbar .in{max-width:760px;margin:0 auto;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px}
+.actionbar .btn{min-height:46px}
+.stop{width:66px;height:66px;border-radius:50%;border:0;background:var(--danger);color:#fff;display:grid;place-items:center;box-shadow:0 8px 26px color-mix(in srgb,var(--danger) 40%,transparent)}
+.stop svg{width:24px;height:24px;fill:currentColor;stroke:none}
+body.is-live main{padding-bottom:calc(120px + env(safe-area-inset-bottom))}
+
+/* dialogues */
+dialog{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:22px;padding:0;width:min(640px,100vw - 24px);max-height:min(86vh,900px)}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+@media(max-width:640px){dialog{margin:auto 0 0;width:100vw;max-width:100vw;border-radius:22px 22px 0 0;max-height:90vh}}
+dialog.small{width:min(420px,100vw - 24px)}
+.dlg-h{position:sticky;top:0;background:var(--panel);display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line);z-index:1}
+.dlg-h h3{margin:0;font-size:17px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dlg-b{padding:16px}
+.dlg-f{position:sticky;bottom:0;background:var(--panel);display:flex;gap:8px;flex-wrap:wrap;padding:12px 16px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--line)}
+pre.preview{white-space:pre-wrap;word-break:break-word;font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;margin:0;color:var(--text)}
+.sum h4{margin:14px 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.sum h4:first-child{margin-top:0}
+.sum ul{margin:0;padding-left:18px}.sum li{margin:3px 0}.sum p{margin:0}
+.kw{display:flex;flex-wrap:wrap;gap:6px}.kw span{font-size:12px;padding:2px 9px;border-radius:999px;border:1px solid var(--line)}
+.set-grp{margin-bottom:22px}
+.field{display:flex;flex-direction:column;gap:5px;font-size:14px;margin-bottom:12px}
+.field.row2{flex-direction:row;align-items:center;gap:10px}
+.field input[type=text],.field input[type=password],.field input[type=number],.field select{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 11px;width:100%}
+.field input[type=range]{width:100%;accent-color:var(--accent)}
+.field input[type=checkbox]{accent-color:var(--accent);width:20px;height:20px;flex:none}
+.hint{font-size:12px;color:var(--muted)}
+.swatches{display:flex;gap:10px;flex-wrap:wrap}
+.swatches button{width:30px;height:30px;border-radius:50%;border:2px solid transparent;background:var(--c);box-shadow:inset 0 0 0 2px var(--panel)}
+.swatches button.on{border-color:var(--c)}
+
+#toasts{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;z-index:60;width:min(92vw,480px);pointer-events:none}
+@media(min-width:1000px){#toasts{left:calc(50% + var(--nav) / 2)}}
+body.is-live #toasts{bottom:calc(108px + env(safe-area-inset-bottom))}
+.toast{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:12px;padding:10px 14px;box-shadow:0 10px 30px rgba(0,0,0,.28);font-size:14px;animation:tin .2s ease-out}
+.toast.warn{border-left-color:var(--warn)}.toast.err{border-left-color:var(--danger)}
+@keyframes tin{from{opacity:0;transform:translateY(6px)}}
+.banner{font-size:13px;padding:10px 12px;border-radius:12px;background:color-mix(in srgb,var(--warn) 12%,var(--panel));border:1px solid color-mix(in srgb,var(--warn) 40%,var(--line));margin-bottom:14px}
+</style>
+</head>
+<body>
+<nav class="nav" id="nav" aria-label="Navigation">
+  <div class="logo"><i><svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></i>Écoute</div>
+  <a class="nav-i" href="#/" data-nav="home"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Accueil</a>
+  <div class="nav-sec"><span>Catégories</span><button id="btnAddCat" aria-label="Nouvelle catégorie"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button></div>
+  <div id="navCats"></div>
+  <div class="nav-foot">
+    <div class="store" id="navStore"></div>
+    <button class="nav-i" id="btnSettings2"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Réglages</button>
+  </div>
+</nav>
+<div class="scrim" id="scrim"></div>
+
+<header class="top"><div class="in">
+  <button class="icon-btn" id="btnMenu" aria-label="Menu"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  <div class="ttl" id="topTitle"></div>
+  <span class="pill" id="livePill" hidden><span class="d"></span><span id="liveClock">00:00</span></span>
+  <button class="icon-btn" id="btnSettings" aria-label="Réglages"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+</div></header>
+
+<main>
+  <div id="banner" class="banner" hidden></div>
+
+  <!-- ACCUEIL -->
+  <section id="home">
+    <div class="cats" id="homeCats"></div>
+    <div class="hero">
+      <button class="go" id="btnGo" aria-label="Démarrer l'écoute">GO</button>
+      <div class="dest" id="heroDest"></div>
+    </div>
+    <div class="card">
+      <div class="segctl" role="tablist">
+        <button data-mode="new" role="tab">Nouveau document</button>
+        <button data-mode="continue" role="tab">Continuer</button>
+      </div>
+      <div id="docPane"></div>
+    </div>
+    <div class="card">
+      <p class="h">Stockage</p>
+      <div class="dest-row">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
+        <div class="grow"><div class="lbl">Dossier racine</div><div class="val" id="rootName"></div></div>
+        <button class="btn" id="btnRoot">Choisir</button>
+      </div>
+      <div id="storePane"></div>
+    </div>
+    <div id="recent"></div>
+  </section>
+
+  <!-- CATÉGORIE -->
+  <section id="catView" hidden></section>
+
+  <!-- ÉCOUTE -->
+  <section id="live" hidden>
+    <div class="card now">
+      <div class="kicker" id="nowKicker"></div>
+      <h2 id="nowTitle">À l'écoute…</h2>
+      <div class="lines" id="lines"></div>
+      <div class="interim" id="interim"></div>
+    </div>
+    <div class="card">
+      <div class="meter"><span class="vad" id="vadBadge">—</span><canvas id="meter"></canvas></div>
+      <div class="vadstats" id="vadStats"></div>
+    </div>
+    <div class="card" id="liveTopicsCard" hidden>
+      <p class="h">Parties terminées</p>
+      <ol class="topics" id="liveTopics"></ol>
+    </div>
+  </section>
+</main>
+
+<div class="actionbar" id="actionbar" hidden><div class="in">
+  <button class="btn" id="btnNewTopic"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Nouvelle partie</button>
+  <button class="stop" id="btnStop" aria-label="Arrêter"><svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg></button>
+  <button class="btn" id="btnPeek"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Résumé</button>
+</div></div>
+
+<dialog id="dlgTopic">
+  <div class="dlg-h"><h3 id="dtTitle"></h3><button class="icon-btn" data-close aria-label="Fermer"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="dlg-b" id="dtBody"></div>
+  <div class="dlg-f" id="dtFoot"></div>
+</dialog>
+
+<dialog id="dlgPreview">
+  <div class="dlg-h"><h3 id="dpTitle"></h3><button class="icon-btn" data-close aria-label="Fermer"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="dlg-b"><pre class="preview" id="dpBody"></pre></div>
+  <div class="dlg-f" id="dpFoot"></div>
+</dialog>
+
+<dialog id="dlgCat" class="small">
+  <div class="dlg-h"><h3 id="dcTitle">Nouvelle catégorie</h3><button class="icon-btn" data-close aria-label="Fermer"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <form class="dlg-b" id="catForm" method="dialog">
+    <label class="field">Nom<input type="text" id="catName" maxlength="40" placeholder="ex. Réunions, Cours de droit, Podcasts…" required></label>
+    <div class="field">Couleur<div class="swatches" id="catColors"></div></div>
+    <p class="hint" id="catHint"></p>
+  </form>
+  <div class="dlg-f"><button class="btn danger ghost" id="catDelete" hidden>Supprimer</button><span class="grow"></span><button class="btn primary" id="catSave">Créer</button></div>
+</dialog>
+
+<dialog id="dlgSettings">
+  <div class="dlg-h"><h3>Réglages</h3><button class="icon-btn" data-close aria-label="Fermer"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="dlg-b">
+    <div class="set-grp">
+      <p class="h">Écoute</p>
+      <label class="field">Langue parlée
+        <select data-k="lang">
+          <option value="fr-FR">Français (France)</option><option value="fr-CA">Français (Canada)</option>
+          <option value="fr-BE">Français (Belgique)</option><option value="fr-CH">Français (Suisse)</option>
+          <option value="en-US">English (US)</option><option value="en-GB">English (UK)</option>
+          <option value="es-ES">Español</option><option value="de-DE">Deutsch</option>
+          <option value="it-IT">Italiano</option><option value="pt-PT">Português</option><option value="nl-NL">Nederlands</option>
+        </select></label>
+      <label class="field row2"><input type="checkbox" data-k="wakeLock"> Garder l'écran allumé pendant l'écoute</label>
+    </div>
+    <div class="set-grp">
+      <p class="h">Découpage en parties</p>
+      <label class="field row2"><input type="checkbox" data-k="topicAuto"> Nouvelle partie à chaque changement de sujet détecté</label>
+      <label class="field">Sensibilité
+        <select data-k="topicSens">
+          <option value="low">Faible : seulement les ruptures nettes</option>
+          <option value="normal">Normale</option>
+          <option value="high">Forte : découpe plus souvent</option>
+        </select></label>
+      <label class="field">Nouvelle partie après un silence de (minutes, 0 = jamais)<input type="number" min="0" max="60" data-k="gapMin"></label>
+      <label class="field">Taille minimale d'une partie (phrases)<input type="number" min="3" max="30" data-k="minTopicSegs"></label>
+      <span class="hint">« Passons à », « point suivant », « autre sujet »… déclenchent aussi une nouvelle partie.</span>
+    </div>
+    <div class="set-grp">
+      <p class="h">Filtrage voix / bruit</p>
+      <label class="field row2"><input type="checkbox" data-k="vad"> Analyse audio (détection de voix)</label>
+      <label class="field">Seuil de détection de la voix : <span id="thrVal"></span><input type="range" min="1.5" max="6" step="0.5" data-k="threshold"></label>
+      <label class="field row2"><input type="checkbox" data-k="distant"> Ignorer les voix lointaines (TV, conversations de fond)</label>
+      <label class="field">Tolérance aux voix lointaines : <span id="distVal"></span><input type="range" min="0.15" max="0.7" step="0.05" data-k="distantRatio"></label>
+      <label class="field">Mots minimum par fragment<input type="number" min="1" max="6" data-k="minWords"></label>
+      <label class="field row2"><input type="checkbox" data-k="showRejected"> Montrer les fragments filtrés pendant l'écoute</label>
+    </div>
+    <div class="set-grp">
+      <p class="h">Résumés et fichiers</p>
+      <label class="field">Moteur de résumé
+        <select data-k="engine"><option value="local">Local (hors ligne, gratuit)</option><option value="claude">Claude via l'API Anthropic</option></select></label>
+      <label class="field">Clé API Anthropic<input type="password" data-k="apiKey" placeholder="sk-ant-…" autocomplete="off"><span class="hint">Stockée uniquement dans ce navigateur.</span></label>
+      <label class="field">Modèle
+        <select data-k="model">
+          <option value="claude-haiku-5-5">Claude Haiku 5.5 (rapide, économique)</option>
+          <option value="claude-sonnet-5-5">Claude Sonnet 5.5</option>
+          <option value="claude-opus-5-5">Claude Opus 5.5</option>
+        </select></label>
+      <label class="field row2"><input type="checkbox" data-k="includeTranscript"> Inclure la transcription dans chaque partie</label>
+    </div>
+    <div class="set-grp">
+      <p class="h">Données</p>
+      <button class="btn danger" id="btnClearHist">Effacer l'historique de l'app</button>
+      <p class="hint" style="margin-top:10px">Les fichiers déjà écrits dans vos dossiers ne sont jamais supprimés par l'app. La transcription utilise la reconnaissance vocale du navigateur (Chrome, Edge, Safari) : selon le navigateur, l'audio peut être traité par Google ou Apple. Filtrage, découpage et résumé local se font sur l'appareil.</p>
+    </div>
+  </div>
+</dialog>
+
+<div id="toasts"></div>
+
+<script>
+'use strict';
+/* =========================================================
+   Utilitaires
+   ========================================================= */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad = n => String(n).padStart(2, '0');
+const fmtT = t => { const d = new Date(t); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+const fmtD = t => new Date(t).toLocaleDateString('fr-FR', {weekday:'short', day:'numeric', month:'short'});
+const fmtLong = t => new Date(t).toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+const isoDate = t => { const d = new Date(t); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
+const fmtDur = ms => { const m = Math.round(ms / 60000); return m < 1 ? '< 1 min' : m < 60 ? m + ' min' : Math.floor(m / 60) + ' h ' + pad(m % 60); };
+const fmtClock = ms => { const s = Math.max(0, Math.floor(ms / 1000)), h = Math.floor(s / 3600); return (h ? h + ':' : '') + pad(Math.floor(s % 3600 / 60)) + ':' + pad(s % 60); };
+const fmtSize = b => b < 1024 ? b + ' o' : b < 1048576 ? Math.round(b / 1024) + ' Ko' : (b / 1048576).toFixed(1) + ' Mo';
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const trunc = (s, n) => s.length > n ? s.slice(0, n - 1).replace(/\s+\S*$/, '') + '…' : s;
+const slug = s => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 50).replace(/-+$/, '') || 'sujet';
+const realSegs = segs => segs.filter(s => !s.type);
+function toast(msg, kind = '', ms = 4500) {
+  const el = document.createElement('div'); el.className = 'toast ' + kind; el.textContent = msg;
+  $('#toasts').appendChild(el); setTimeout(() => el.remove(), ms);
+}
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+// IndexedDB clé/valeur : sessions + poignée du dossier (non sérialisable en JSON)
+const idb = (() => {
+  let p;
+  const open = () => p || (p = new Promise((res, rej) => {
+    const r = indexedDB.open('ecoute-resume', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('kv');
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+  }));
+  const tx = (mode, fn) => open().then(db => new Promise((res, rej) => {
+    const t = db.transaction('kv', mode), req = fn(t.objectStore('kv'));
+    t.oncomplete = () => res(req && req.result); t.onerror = () => rej(t.error);
+  }));
+  return {get: k => tx('readonly', s => s.get(k)), set: (k, v) => tx('readwrite', s => s.put(v, k)), del: k => tx('readwrite', s => s.delete(k))};
+})();
+
+const IC = {
+  file:'<svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>',
+  fileCheck:'<svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 14l2 2 4-4"/></svg>',
+  eye:'<svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',
+  folder:'<svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>',
+  x:'<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  dl:'<svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>',
+  share:'<svg viewBox="0 0 24 24"><path d="M12 15V3M8 7l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>',
+  copy:'<svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>',
+  refresh:'<svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>'
+};
+
+Object.assign(IC, {
+  play:'<svg viewBox="0 0 24 24"><path d="M7 5v14l11-7z"/></svg>',
+  list:'<svg viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>',
+  edit:'<svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>',
+  plus:'<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
+  disk:'<svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>',
+  doc:'<svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>'
+});
+
+/* =========================================================
+   Modèle : catégories → documents → parties
+   Un « document » est le gros fichier virtuel d'une écoute. Il n'est jamais écrit d'un bloc :
+   chaque sujet devient une partie (un petit fichier), reliées par un sommaire léger.
+   Racine / Catégorie / 2026-11-13 22h26 / 00 - Sommaire.md, 01 - Sujet.md, 02 - …
+   ========================================================= */
+const DEFAULTS = {lang:'fr-FR', threshold:2.5, distant:true, distantRatio:0.4, minWords:2, showRejected:false,
+  engine:'local', apiKey:'', model:'claude-haiku-5-5', wakeLock:true, vad:true,
+  topicAuto:true, topicSens:'normal', gapMin:3, minTopicSegs:5, includeTranscript:true,
+  curCat:'general', docMode:'new', continueKey:''};
+const S = Object.assign({}, DEFAULTS, store.get('ecoute.settings', {}));
+const saveSettings = () => store.set('ecoute.settings', S);
+
+const COLORS = ['#3ecf9a', '#5b9cf5', '#f0b54a', '#e66fb0', '#9b7bf0', '#ef6b6b', '#46c2d6', '#a3c94a'];
+const SEED_CATS = [
+  {id:'general', name:'Général', folder:'Général', color:COLORS[0]},
+  {id:'reunions', name:'Réunions', folder:'Réunions', color:COLORS[1]},
+  {id:'cours', name:'Cours', folder:'Cours', color:COLORS[2]},
+  {id:'idees', name:'Idées', folder:'Idées', color:COLORS[3]}];
+let cats = store.get('ecoute.cats', null) || SEED_CATS.map(c => ({...c}));
+const saveCats = () => store.set('ecoute.cats', cats);
+const catById = id => cats.find(c => c.id === id) || cats[0];
+
+let docs = [];                 // documents connus de l'app (le plus récent en premier)
+let live = null;               // {doc, start}
+const FS_OK = 'showDirectoryPicker' in window;
+let root = null, rootName = '', rootOK = false;
+const diskDocs = {};           // catId -> [{folder, parts:[noms], title}]  (documents présents sur le disque)
+
+const SOMMAIRE = '00 - Sommaire.md';
+const newPart = t => ({id: t + Math.random(), start: t, end: 0, status: 'open', segments: [], title: '', summary: null, savedAs: '', sims: []});
+const newDoc = (cat, t) => ({id: t, cat, created: t, title: '', folder: '', diskParts: [], parts: [], runs: [], rejected: [], updated: t});
+const curPart = () => live && live.doc.parts[live.doc.parts.length - 1];
+const partNo = (doc, i) => (doc.diskParts ? doc.diskParts.length : 0) + i + 1;
+const docsOf = catId => docs.filter(d => d.cat === catId);
+const docLabel = d => d.title || `${cap(fmtD(d.created))} · ${fmtT(d.created)}`;
+const docSubtitle = d => d.parts.map(p => p.title).filter(Boolean).slice(0, 3).join(' · ');
+const folderNameFor = t => { const d = new Date(t); return `${isoDate(t)} ${pad(d.getHours())}h${pad(d.getMinutes())}`; };
+const safeName = s => (s || '').replace(/[\\/:*?"<>|#^[\]]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60).trim() || 'Sans titre';
+const numStr = n => String(n).padStart(2, '0');
+const partFile = (doc, i) => `${numStr(partNo(doc, i))} - ${safeName(doc.parts[i].title)}.md`;
+const mdLink = (label, file) => `[${label}](${encodeURI(file)})`;
+
+let saveTimer = null;
+function saveSoon() { clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 800); }
+function saveNow() { clearTimeout(saveTimer); idb.set('docs', docs.slice(0, 200)).catch(() => {}); }
+
+/* =========================================================
+   Analyse audio : détection de voix (VAD)
+   ========================================================= */
+let audioCtx = null, analyser = null, mediaStream = null, tickNode = null, fallbackTimer = null;
+let td, fd, binHz, floor = 0.002, voiceRun = 0, lastVoice = 0, curLabel = 'off', fgLevel = 0, vadRuntimeOff = false;
+const frames = [];
+const HIST = 200, hist = [];
+const WORKLET = `class Tick extends AudioWorkletProcessor{constructor(){super();this.n=0}
+process(){if(++this.n>=18){this.n=0;this.port.postMessage(0)}return true}}
+registerProcessor('tick',Tick);`;
+const vadActive = () => !!analyser && S.vad && !vadRuntimeOff;
+
+async function startAudio() {
+  if (analyser) return;
+  mediaStream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true, noiseSuppression:true, autoGainControl:true, channelCount:1}});
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') await audioCtx.resume().catch(() => {});
+  const src = audioCtx.createMediaStreamSource(mediaStream);
+  analyser = audioCtx.createAnalyser(); analyser.fftSize = 2048; analyser.smoothingTimeConstant = 0.2;
+  src.connect(analyser);
+  td = new Float32Array(analyser.fftSize); fd = new Float32Array(analyser.frequencyBinCount);
+  binHz = audioCtx.sampleRate / analyser.fftSize;
+  try {   // cadence pilotée par le thread audio : pas bridée en arrière-plan
+    const url = URL.createObjectURL(new Blob([WORKLET], {type:'application/javascript'}));
+    await audioCtx.audioWorklet.addModule(url);
+    tickNode = new AudioWorkletNode(audioCtx, 'tick');
+    const mute = audioCtx.createGain(); mute.gain.value = 0;
+    src.connect(tickNode); tickNode.connect(mute); mute.connect(audioCtx.destination);
+    tickNode.port.onmessage = vadStep;
+  } catch { fallbackTimer = setInterval(vadStep, 50); }
+}
+function stopAudio() {
+  clearInterval(fallbackTimer); fallbackTimer = null;
+  if (tickNode) { tickNode.port.onmessage = null; try { tickNode.disconnect(); } catch {} tickNode = null; }
+  if (mediaStream) mediaStream.getTracks().forEach(t => t.stop());
+  if (audioCtx) audioCtx.close().catch(() => {});
+  mediaStream = audioCtx = analyser = null; curLabel = 'off';
+}
+function vadStep() {
+  if (!analyser) return;
+  analyser.getFloatTimeDomainData(td);
+  let sum = 0, zc = 0, prev = td[0];
+  for (let i = 0; i < td.length; i++) { const v = td[i]; sum += v * v; if ((v >= 0) !== (prev >= 0)) zc++; prev = v; }
+  const rms = Math.sqrt(sum / td.length), zcr = zc / td.length;
+  analyser.getFloatFrequencyData(fd);
+  let total = 0, band = 0, logS = 0, linS = 0, n = 0;
+  for (let i = 1; i < fd.length; i++) {
+    const f = i * binHz; if (f > 8000) break;
+    const p = Math.pow(10, fd[i] / 10); total += p;
+    if (f >= 250 && f <= 3800) { band += p; if (f >= 300 && f <= 3000) { logS += Math.log(p + 1e-14); linS += p; n++; } }
+  }
+  const ratio = total > 0 ? band / total : 0;
+  const flat = n && linS > 0 ? Math.exp(logS / n) / (linS / n) : 1;
+  floor = rms < floor ? floor * 0.85 + rms * 0.15 : floor * 0.9985 + rms * 0.0015;
+  floor = Math.max(floor, 0.0008);
+  const now = Date.now();
+  const loud = rms > floor * S.threshold && rms > 0.003;
+  const voiceLike = ratio > 0.5 && flat < 0.5 && zcr < 0.3;
+  if (loud && voiceLike) { if (!voiceRun) voiceRun = now; } else voiceRun = 0;
+  if (voiceRun && now - voiceRun >= 80) lastVoice = now;
+  const speaking = now - lastVoice < 350;
+  curLabel = speaking ? 'voice' : loud ? 'noise' : 'silence';
+  frames.push({t:now, s:speaking ? 1 : 0, n:(!speaking && loud) ? 1 : 0, rms});
+  while (frames.length && frames[0].t < now - 120000) frames.shift();
+  const lvl = v => clamp((20 * Math.log10(v + 1e-8) + 70) / 60, 0, 1);
+  hist.push({lvl:lvl(rms), thr:lvl(floor * S.threshold), label:curLabel});
+  if (hist.length > HIST) hist.shift();
+}
+function windowStats(from, to) {
+  let sp = 0, tot = 0, sum = 0;
+  for (const f of frames) if (f.t >= from && f.t <= to) { tot++; if (f.s) { sp++; sum += f.rms; } }
+  return {tot, speechMs: sp * 50, meanRms: sp ? sum / sp : 0};
+}
+function last60() {
+  const now = Date.now(); let v = 0, n = 0, t = 0;
+  for (const f of frames) if (f.t >= now - 60000) { t++; v += f.s; n += f.n; }
+  return t ? {v: Math.round(v / t * 100), n: Math.round(n / t * 100), s: Math.round((t - v - n) / t * 100)} : null;
+}
+
+/* =========================================================
+   Reconnaissance vocale
+   ========================================================= */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec = null, wantListen = false, recActive = false, lastRecStart = 0, utterStart = 0, hiddenAt = 0;
+
+function startRecognition() {
+  if (!SR || !wantListen) return;
+  if (rec) { try { rec.onend = null; rec.abort(); } catch {} }
+  const r = new SR(); rec = r;
+  r.lang = S.lang; r.continuous = true; r.interimResults = true; r.maxAlternatives = 1;
+  r.onstart = () => { recActive = true; setPill('on'); };
+  r.onresult = e => {
+    let interim = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const res = e.results[i], alt = res[0];
+      if (res.isFinal) handleFinal(alt.transcript, alt.confidence); else interim += alt.transcript;
+    }
+    if (interim && !utterStart) utterStart = Date.now();
+    $('#interim').textContent = interim;
+  };
+  r.onerror = e => {
+    if (e.error === 'no-speech' || e.error === 'aborted') return;
+    if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+      toast("Accès au micro ou au service de reconnaissance refusé. Autorisez le micro pour cette page.", 'err', 7000);
+      stopLive(); return;
+    }
+    if (e.error === 'audio-capture') {
+      if (analyser) { stopAudio(); vadRuntimeOff = true; toast("Cet appareil ne partage pas le micro : analyse audio désactivée, la transcription continue.", 'warn', 7000); }
+      else toast('Aucun micro disponible.', 'err');
+      return;
+    }
+    if (e.error === 'language-not-supported') { toast('Langue non prise en charge par ce navigateur.', 'err'); stopLive(); return; }
+    if (e.error === 'network') { setPill('warn'); toast('Reconnaissance vocale : problème réseau, nouvelle tentative…', 'warn'); }
+  };
+  r.onend = () => {
+    recActive = false;
+    if (rec !== r) return;
+    if (wantListen) {
+      const wait = Date.now() - lastRecStart < 1500 ? 1500 : 150;
+      setTimeout(() => { if (wantListen && rec === r) startRecognition(); }, wait);
+    }
+  };
+  lastRecStart = Date.now();
+  const track = mediaStream && mediaStream.getAudioTracks()[0];
+  try { track ? r.start(track) : r.start(); }    // piste débruitée si le navigateur l'accepte
+  catch { try { r.start(); } catch (err) { console.warn(err); } }
+}
+
+/* =========================================================
+   Nettoyage et filtrage
+   ========================================================= */
+const FILLER = /(^|\s)(euh+|heu+|hum+|hmm+|mmh+|bah|ben|hein|uh+|um+|erm+|uhm+)(?=\s|$|[,.!?])/gi;
+function cleanText(t) {
+  let s = ' ' + t.trim() + ' ';
+  s = s.replace(FILLER, ' ').replace(FILLER, ' ');
+  s = s.replace(/\b(\p{L}+)(\s+\1\b)+/giu, '$1');
+  s = s.replace(/\s+/g, ' ').trim();
+  return s ? s[0].toUpperCase() + s.slice(1) : '';
+}
+const norm = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\p{L}\p{N} ]/gu, '').trim();
+
+function handleFinal(raw, conf) {
+  if (!live) return;
+  const now = Date.now(), from = (utterStart || now - 6000) - 1500;
+  utterStart = 0; $('#interim').textContent = '';
+  const text = cleanText(raw || ''), words = text ? text.split(' ').length : 0;
+  let reason = null, meanRms = 0;
+  if (!words) reason = 'tic de langage';
+  else if (conf > 0 && conf < 0.3) reason = 'reconnaissance incertaine';
+  if (!reason && vadActive()) {
+    const st = windowStats(from, now); meanRms = st.meanRms;
+    if (st.tot > 8 && st.speechMs < 200) reason = 'aucune voix détectée';
+    else if (S.distant && fgLevel > 0 && st.meanRms > 0 && st.meanRms < fgLevel * S.distantRatio) reason = "voix d'arrière-plan";
+  }
+  if (!reason && words < S.minWords && (!(conf >= 0.75) || !tokens(text).length)) reason = 'fragment trop court';
+  if (!reason) { const n = norm(text); if (realSegs(curPart().segments).slice(-4).some(s => norm(s.text) === n)) reason = 'doublon'; }
+  if (reason) {
+    live.doc.rejected.push({t:now, text: text || raw, reason});
+    if (live.doc.rejected.length > 300) live.doc.rejected.splice(0, live.doc.rejected.length - 300);
+    renderLive(); saveSoon(); return;
+  }
+  if (meanRms > 0) fgLevel = fgLevel ? (meanRms > fgLevel * 0.6 ? fgLevel * 0.8 + meanRms * 0.2 : fgLevel) : meanRms;
+  addSegment({t:now, text, conf: conf || 0});
+}
+
+/* =========================================================
+   Analyse de texte (mots-clés, résumé local)
+   ========================================================= */
+const STOP = new Set((`a à ai aie ainsi alors au aucun aussi autre autres aux avec avoir avait avais avant après bah ben bien bon ça ca car ce ceci cela celle celles celui ces cet cette chaque chez ci comme comment dans de des du donc dont elle elles en encore est et été être eu eux fait faire faut fois ici il ils je juste la le les leur leurs lui ma mais me même mes moi mon ne ni non nos notre nous on ont ou où par pas peu peut plus pour pourquoi quand que quel quelle quelles quels qui quoi sa sans se ses si son sont sur ta te tes toi ton tous tout toute toutes très tu un une va vais vas voilà vos votre vous euh hein ok okay oui ouais genre truc chose choses enfin puis déjà là était étaient sera serait suis es sommes êtes avez avons as vraiment beaucoup trop rien dire dit fais font faites vient venir aller allez allons vont mettre mis peux pouvez pouvons veut veux voulez voir vu sais savoir sait crois pense pensez coup moment parce cest quil quon jai ya bref autant ceux lors moins tant tel telle peut-être quelque quelques toujours jamais passons passer parlons parler sujet point suivant maintenant ensuite autre prochaine prochain dernier dernière an ans année fin début part côté niveau the and or but if of to in on at for with is are was were be been being it this that these those you he she we they me my your our their his her its not no yes do does did have has had will would can could should just so then there here what which who when where why how all any some more most very really like get got going know think um uh also about from into than them well okay yeah topic next move moving`).split(/\s+/));
+const ELISION = /^(?:l|d|j|m|t|s|n|c|qu|jusqu|lorsqu|puisqu)['’]/;
+const rawTokens = s => s.toLowerCase().split(/[^\p{L}\p{N}'’-]+/u).map(w => w.replace(ELISION, '').replace(/['’]s$/, '').replace(/^-+|-+$/g, '')).filter(Boolean);
+const isContent = w => w.length >= 3 && !STOP.has(w) && !/^\d+$/.test(w);
+const tokens = s => rawTokens(s).filter(isContent);
+const escRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const kwRe = list => new RegExp('(?:^|[^\\p{L}])(?:' + list.map(escRe).join('|') + ')(?=$|[^\\p{L}])', 'iu');
+const ACTION = kwRe(["il faut","il faudrait","faut que","faudra","on doit","je dois","tu dois","vous devez","nous devons","doit être","à faire","n'oublie pas","n'oubliez pas","ne pas oublier","pense à","pensez à","penser à","rappelle-moi","rappelle moi","je vais","on va","tu vas","vous allez","je m'occupe","tu peux","pourrais-tu","pourrais tu","pouvez-vous","pouvez vous","merci de","il reste à","prochaine étape","deadline","avant le","d'ici","need to","have to","must","should","i will","i'll","we'll","we will","let's","todo","to do","follow up","remind me"]);
+const DECISION = kwRe(["on a décidé","nous avons décidé","j'ai décidé","c'est décidé","décision","on part sur","c'est validé","validé","on valide","on garde","c'est acté","acté","on retient","on choisit","on a choisi","d'accord pour","ça marche pour","we decided","decided","decision","agreed","let's go with","we'll go with","approved"]);
+const Q_ANY = kwRe(["est-ce que","est-ce qu","qu'est-ce que","qu'est-ce qui","n'est-ce pas","tu crois que","vous croyez que"]);
+const Q_START = new RegExp('^\\s*(?:' + ["est-ce","pourquoi","comment","quand","combien","qui","quoi","quel","quelle","quels","quelles","où","qu'est-ce","tu sais","vous savez","tu penses","vous pensez","why","how","what","when","where","who","which","is it","are you","do you","does","can you","could you","should we"].map(escRe).join('|') + ')(?=$|[^\\p{L}])', 'iu');
+const isQ = s => /\?/.test(s) || Q_ANY.test(s) || Q_START.test(s);
+const FIGURES = kwRe(["lundi","mardi","mercredi","jeudi","vendredi","samedi","dimanche","demain","après-demain","hier","semaine prochaine","mois prochain","janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre","euro","euros","pour cent","pourcent","million","millions","milliard","milliards","mille","monday","tuesday","wednesday","thursday","friday","saturday","sunday","tomorrow","next week","january","february","march","april","june","july","august","september","october","november","december","dollars","percent"]);
+
+function analyze(segs) {
+  const tf = new Map(), bi = new Map();
+  const segToks = segs.map(s => {
+    const raw = rawTokens(s.text), toks = raw.filter(isContent);
+    toks.forEach(w => tf.set(w, (tf.get(w) || 0) + 1));
+    for (let i = 0; i < raw.length - 1; i++) if (isContent(raw[i]) && isContent(raw[i + 1])) { const b = raw[i] + ' ' + raw[i + 1]; bi.set(b, (bi.get(b) || 0) + 1); }
+    return toks;
+  });
+  const minC = segs.length > 6 ? 2 : 1;
+  const bigrams = [...bi].filter(([, c]) => c >= 2).sort((a, b) => b[1] - a[1]).slice(0, 3).map(x => x[0]);
+  const unis = [...tf].filter(([w, c]) => c >= minC && !bigrams.some(b => b.split(' ').includes(w)))
+    .sort((a, b) => b[1] - a[1] || b[0].length - a[0].length).map(x => x[0]);
+  return {tf, segToks, keywords: [...bigrams, ...unis].slice(0, 10)};
+}
+const cap = w => w ? w[0].toUpperCase() + w.slice(1) : w;
+const liveTitle = segs => { const k = analyze(segs).keywords; return k.length ? k.slice(0, 3).map(cap).join(' · ') : ''; };
+
+function localSummary(segs) {
+  const n = segs.length, {tf, segToks, keywords} = analyze(segs);
+  const score = segs.map((s, i) => {
+    let sc = 0; new Set(segToks[i]).forEach(w => { const c = tf.get(w); sc += c >= 2 ? c : 0.3; });
+    const words = s.text.split(' ').length;
+    return sc / (1 + Math.sqrt(segToks[i].length || 1)) * (words >= 5 ? 1 : 0.5) * (isQ(s.text) ? 0.6 : 1);
+  });
+  const ranked = segs.map((s, i) => ({s, i, sc: score[i]})).sort((a, b) => b.sc - a.sc);
+  const k = clamp(Math.round(n * 0.3), Math.min(2, n), 7);
+  const keyPoints = ranked.slice(0, k).sort((a, b) => a.i - b.i).map(x => trunc(x.s.text, 240));
+  const pick = re => { const out = [], seen = new Set();
+    for (const s of segs) if (re(s.text)) { const key = norm(s.text); if (!seen.has(key)) { seen.add(key); out.push(trunc(s.text, 220)); } }
+    return out.slice(-8); };
+  const t0 = segs[0].t, t1 = segs[n - 1].t, dur = Math.max(1, Math.round((t1 - t0) / 60000));
+  let overview;
+  if (n <= 3) overview = segs.map(s => s.text).join(' ');
+  else {
+    const top = ranked.slice(0, 2).sort((a, b) => a.i - b.i).map(x => trunc(x.s.text, 200));
+    overview = `${n} interventions sur environ ${dur} min. ` + (keywords.length ? `Il est question de : ${keywords.slice(0, 4).join(', ')}. ` : '') + `L'essentiel : « ${top.join(' » … « ')} ».`;
+  }
+  const title = keywords.length ? keywords.slice(0, 2).map(cap).join(' · ') : 'Sujet du ' + fmtD(t0) + ' ' + fmtT(t0);
+  return {title, overview, keyPoints,
+    decisions: pick(t => DECISION.test(t)), actions: pick(t => ACTION.test(t)),
+    questions: pick(isQ), figures: pick(t => /\d/.test(t) || FIGURES.test(t)), keywords};
+}
+
+async function claudeSummary(segs) {
+  if (!S.apiKey) throw new Error('clé API manquante dans les réglages');
+  const transcript = segs.map(s => `[${fmtT(s.t)}] ${s.text}`).join('\n');
+  const prompt = `Voici la transcription brute (reconnaissance vocale, peu de ponctuation, erreurs possibles) d'un passage d'un enregistrement audio, découpé automatiquement autour d'un même sujet. Résume-le fidèlement sans rien inventer. Ignore les fragments incohérents qui ressemblent à du bruit (télévision, conversations de fond). Réponds dans la langue de la transcription, UNIQUEMENT avec un objet JSON valide :
+{"titre":"titre court et précis du sujet (max 8 mots)","resume":"2 à 4 phrases","points_cles":[],"decisions":[],"actions":[],"questions":[],"chiffres_dates":[],"mots_cles":[]}
+Laisse une liste vide quand il n'y a rien.
+
+Transcription :
+${transcript}`;
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{'content-type':'application/json','x-api-key':S.apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body: JSON.stringify({model:S.model, max_tokens:1800, messages:[{role:'user', content:prompt}]})
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(res.status === 401 ? 'clé API invalide' : (data.error && data.error.message) || ('erreur API ' + res.status));
+  const txt = (data.content || []).map(c => c.text || '').join('');
+  const j = JSON.parse(txt.slice(txt.indexOf('{'), txt.lastIndexOf('}') + 1));
+  const arr = v => Array.isArray(v) ? v.map(x => typeof x === 'string' ? x : JSON.stringify(x)).filter(Boolean) : [];
+  return {title: j.titre || 'Sujet', overview: j.resume || '', keyPoints: arr(j.points_cles), decisions: arr(j.decisions),
+    actions: arr(j.actions), questions: arr(j.questions), figures: arr(j.chiffres_dates), keywords: arr(j.mots_cles)};
+}
+async function makeSummary(segs) {
+  segs = realSegs(segs);
+  let sm, engine = S.engine;
+  try { sm = engine === 'claude' ? await claudeSummary(segs) : localSummary(segs); }
+  catch (e) { toast('Résumé Claude indisponible (' + e.message + ') : résumé local utilisé.', 'warn', 7000); sm = localSummary(segs); engine = 'local'; }
+  return Object.assign(sm, {at: Date.now(), engine, count: segs.length});
+}
+
+/* =========================================================
+   Détection de changement de sujet
+   Cohésion lexicale (fenêtre récente vs contexte), expressions de transition, silences
+   ========================================================= */
+const CUES = kwRe(["passons à","passons au","passons aux","on passe à","on passe au","passer à","autre sujet","changement de sujet","changeons de sujet","point suivant","sujet suivant","prochain point","deuxième point","troisième point","quatrième point","dernier point","parlons de","parlons du","parlons des","parlons maintenant","on enchaîne","on enchaine","ensuite on parle","pour le point","concernant maintenant","next topic","moving on","let's move on","next item","another topic","changing the subject","next point"]);
+const SUF = ['ements','ement','ations','ation','atrices','atrice','ateurs','ateur','ables','able','ibles','ible','istes','iste','ismes','isme','ites','ite','euses','euse','eurs','eur','ives','ive','ions','ances','ance','ences','ence','ments','ment','ees','ee','es','s','x','e'];
+function stem(w) {
+  w = w.normalize('NFD').replace(/[̀-ͯ]/g, '');
+  for (const s of SUF) if (w.endsWith(s) && w.length - s.length >= 4) { w = w.slice(0, -s.length); break; }
+  return w.slice(0, 7);
+}
+const vecCache = new WeakMap();
+function segVec(seg) {
+  let v = vecCache.get(seg);
+  if (!v) { v = new Map(); for (const w of tokens(seg.text)) { const k = stem(w); v.set(k, (v.get(k) || 0) + 1); } vecCache.set(seg, v); }
+  return v;
+}
+function sumVec(segs) { const v = new Map(); for (const s of segs) for (const [k, c] of segVec(s)) v.set(k, (v.get(k) || 0) + c); return v; }
+function cosine(a, b) {
+  let dot = 0, na = 0, nb = 0;
+  for (const [k, x] of a) { const wx = 1 + Math.log(x); na += wx * wx; const y = b.get(k); if (y) dot += wx * (1 + Math.log(y)); }
+  for (const y of b.values()) { const wy = 1 + Math.log(y); nb += wy * wy; }
+  return na && nb ? dot / Math.sqrt(na * nb) : 0;
+}
+// Renvoie l'indice où commence le nouveau sujet, ou -1.
+// Méthode inspirée de TextTiling : à chaque phrase, on mesure la ressemblance entre les 8 phrases
+// d'avant et les 3 d'après une « frontière ». Un vrai changement de sujet forme un creux profond
+// (ressemblance élevée avant, quasi nulle au creux, qui remonte après) ; une simple digression non.
+const DEPTH = {low: 0.32, normal: 0.26, high: 0.20};
+function detectShift(topic) {
+  const segs = topic.segments, n = segs.length, W = 3, last = segs[n - 1];
+  if (n >= 4 && CUES.test(last.text)) return n - 1;
+  if (n < S.minTopicSegs + W) return -1;
+  const g = n - W;
+  const left = sumVec(segs.slice(Math.max(0, g - 8), g)), right = sumVec(segs.slice(g, n));
+  if (left.size < 4 || right.size < 3) return -1;
+  const sims = topic.sims || (topic.sims = []);
+  sims.push({g, s: Math.round(cosine(left, right) * 1000) / 1000});
+  if (sims.length > 24) sims.shift();
+  const D = DEPTH[S.topicSens] || DEPTH.normal;
+  for (let i = sims.length - 3; i >= 1 && i >= sims.length - 6; i--) {
+    const c = sims[i];
+    if (c.g < S.minTopicSegs || c.s > 0.12) continue;
+    const before = sims.slice(Math.max(0, i - 8), i), after = sims.slice(i + 1);
+    if (sims[i - 1].s < c.s || after.some(x => x.s < c.s)) continue;     // doit être un creux local
+    const depth = (Math.max(...before.map(x => x.s)) - c.s) + (Math.max(...after.map(x => x.s)) - c.s);
+    if (depth >= D) { topic.sims = []; return c.g; }
+  }
+  return -1;
+}
+
+
+function addSegment(seg) {
+  let part = curPart();
+  const prev = part.segments[part.segments.length - 1];
+  if (S.gapMin > 0 && prev && seg.t - prev.t > S.gapMin * 60000 && part.segments.length >= 2) part = startNewPart(seg.t, 'silence');
+  part.segments.push(seg);
+  if (S.topicAuto) {
+    const at = detectShift(part);
+    if (at > 0) {
+      const moved = part.segments.splice(at);
+      const np = startNewPart(moved[0].t, CUES.test(moved[0].text) ? 'transition' : 'auto', part);
+      np.segments = moved;
+    }
+  }
+  live.doc.updated = Date.now();
+  renderLive(); saveSoon();
+}
+function startNewPart(t, why, from = curPart()) {
+  const doc = live.doc, np = newPart(t);
+  doc.parts.push(np);
+  if (from && realSegs(from.segments).length) {
+    closePart(from, doc);
+    const label = {auto:'Changement de sujet détecté', transition:'Transition détectée', silence:'Long silence', manual:'Nouvelle partie'}[why];
+    toast(`${label} : partie ${partNo(doc, doc.parts.length - 1)} commencée. La précédente est en cours de résumé.`);
+  } else if (from) doc.parts.splice(doc.parts.indexOf(from), 1);
+  renderLive();
+  return np;
+}
+
+/* =========================================================
+   Clôture d'une partie : résumé + fichiers (partie, voisine, sommaire)
+   ========================================================= */
+const pendingCloses = new Set();
+function closePart(part, doc) {
+  const p = closePartInner(part, doc);
+  pendingCloses.add(p); p.finally(() => pendingCloses.delete(p));
+  return p;
+}
+async function closePartInner(part, doc) {
+  if (part.status !== 'open') return;
+  const segs = realSegs(part.segments);
+  part.status = 'summarizing';
+  part.end = segs.length ? segs[segs.length - 1].t : Date.now();
+  part.title = liveTitle(segs) || part.title;
+  renderAll();
+  part.summary = await makeSummary(segs);
+  part.title = part.summary.title;
+  await persistPart(part, doc);
+  saveSoon(); renderAll();
+}
+
+function summaryBlocksMD(sm, h) {
+  const L = (t, a) => a && a.length ? `\n${h} ${t}\n\n${a.map(x => '- ' + x).join('\n')}\n` : '';
+  return (sm.overview ? `\n${h} Résumé\n\n${sm.overview}\n` : '') + L('Points clés', sm.keyPoints) + L('Décisions', sm.decisions) +
+    L('Actions / à faire', sm.actions) + L('Questions', sm.questions) + L('Chiffres & dates', sm.figures);
+}
+function navLine(doc, i) {
+  const items = [];
+  const prevName = i > 0 ? (doc.parts[i - 1].savedAs || partFile(doc, i - 1)) : (doc.diskParts && doc.diskParts.length ? doc.diskParts[doc.diskParts.length - 1] : '');
+  if (prevName) items.push(mdLink('← Partie précédente', prevName));
+  items.push(mdLink('Sommaire', SOMMAIRE));
+  const next = doc.parts[i + 1];
+  if (next && next.status !== 'open' && next.title) items.push(mdLink('Partie suivante →', next.savedAs || partFile(doc, i + 1)));
+  return items.join(' · ');
+}
+function partMD(doc, i) {
+  const part = doc.parts[i], segs = realSegs(part.segments), sm = part.summary || localSummary(segs), cat = catById(doc.cat), n = partNo(doc, i);
+  const end = part.end || (segs.length ? segs[segs.length - 1].t : part.start);
+  const fm = ['---', `document: ${JSON.stringify(docLabel(doc))}`, `categorie: ${JSON.stringify(cat.name)}`, `partie: ${n}`, `titre: ${JSON.stringify(sm.title)}`,
+    `date: ${isoDate(part.start)}`, `debut: "${fmtT(part.start)}"`, `fin: "${fmtT(end)}"`,
+    `mots_cles: [${(sm.keywords || []).map(k => JSON.stringify(k)).join(', ')}]`, `moteur: ${sm.engine || 'local'}`, '---', ''].join('\n');
+  return fm + `\n# ${n}. ${sm.title}\n\n_${cat.name} › ${docLabel(doc)} · partie ${n} · ${fmtT(part.start)} → ${fmtT(end)} · ${segs.length} interventions_\n\n${navLine(doc, i)}\n` +
+    summaryBlocksMD(sm, '##') + ((sm.keywords || []).length ? `\n**Mots-clés :** ${sm.keywords.join(', ')}\n` : '') +
+    (S.includeTranscript ? `\n## Transcription\n\n${segs.map(s => `**${fmtT(s.t)}** ${s.text}`).join('\n\n')}\n` : '') +
+    `\n---\n\n${navLine(doc, i)}\n`;
+}
+function indexMD(doc) {
+  const cat = catById(doc.cat), done = doc.parts.filter(p => p.status !== 'open' && p.title);
+  const total = (doc.diskParts ? doc.diskParts.length : 0) + done.length;
+  const first = doc.created, lastP = done[done.length - 1], last = lastP ? lastP.end : first;
+  const kw = [...new Set(done.flatMap(p => (p.summary && p.summary.keywords || []).slice(0, 3)))].slice(0, 12);
+  let md = ['---', `document: ${JSON.stringify(docLabel(doc))}`, `categorie: ${JSON.stringify(cat.name)}`, `cree: ${isoDate(first)}`, `parties: ${total}`, '---', ''].join('\n');
+  md += `\n# ${docLabel(doc)}\n\n_${cat.name} · ${cap(fmtLong(first))} · ${total} partie${total > 1 ? 's' : ''} · ${fmtT(first)} → ${fmtT(last)}_\n\n`;
+  md += `Ce document est découpé en parties, une par sujet abordé. Ce sommaire les relie sans jamais les rassembler en un seul gros fichier.\n\n## Parties\n\n`;
+  (doc.diskParts || []).forEach((f, i) => { md += `${i + 1}. ${doc.diskEntries ? doc.diskEntries[i].replace(/\n\s*/g, '  \n   ') : mdLink(f.replace(/^\d+\s-\s/, '').replace(/\.md$/, ''), f)}\n`; });
+  doc.parts.forEach((p, i) => {
+    if (p.status === 'open' || !p.title) return;
+    const one = p.summary && p.summary.overview ? trunc(p.summary.overview.replace(/^\d+ interventions sur environ \d+ min\. /, ''), 170) : '';
+    md += `${partNo(doc, i)}. ${mdLink(p.title, p.savedAs || partFile(doc, i))} — ${fmtT(p.start)} → ${fmtT(p.end)}${one ? `  \n   ${one}` : ''}\n`;
+  });
+  if (kw.length) md += `\n## Mots-clés\n\n${kw.join(', ')}\n`;
+  return md;
+}
+
+async function hasPerm(h, ask = false) {
+  if (!h || !h.queryPermission) return false;
+  const o = {mode:'readwrite'};
+  try { if (await h.queryPermission(o) === 'granted') return true; if (!ask) return false; return (await h.requestPermission(o)) === 'granted'; }
+  catch { return false; }
+}
+async function exists(dir, name, kind) {
+  try { kind === 'dir' ? await dir.getDirectoryHandle(name) : await dir.getFileHandle(name); return true; }
+  catch (e) { if (e.name === 'NotFoundError' || e.name === 'TypeMismatchError') return false; throw e; }
+}
+async function writeFile(dir, name, text) {
+  const fh = await dir.getFileHandle(name, {create:true}); const w = await fh.createWritable();
+  await w.write(text); await w.close();
+}
+async function docDir(doc) {
+  if (!root || !(rootOK = await hasPerm(root))) return null;
+  const cat = catById(doc.cat);
+  const cdir = await root.getDirectoryHandle(cat.folder, {create:true});
+  if (!doc.folder) {
+    let name = folderNameFor(doc.created), i = 2;
+    while (await exists(cdir, name, 'dir')) name = `${folderNameFor(doc.created)} (${i++})`;
+    doc.folder = name;
+  }
+  return cdir.getDirectoryHandle(doc.folder, {create:true});
+}
+let writeQ = Promise.resolve();
+function persistPart(part, doc) {
+  writeQ = writeQ.then(async () => {
+    try {
+      const dir = await docDir(doc);
+      if (!dir) { part.status = 'ready'; }
+      else {
+        const i = doc.parts.indexOf(part);
+        const name = partFile(doc, i);
+        part.status = 'saved'; part.savedAs = name;
+        await writeFile(dir, name, partMD(doc, i));
+        const prev = doc.parts[i - 1];   // ajoute le lien « partie suivante » à la précédente
+        if (prev && prev.status === 'saved' && prev.savedAs) await writeFile(dir, prev.savedAs, partMD(doc, i - 1));
+        await writeFile(dir, SOMMAIRE, indexMD(doc));
+      }
+    } catch (e) { part.status = 'error'; part.error = e.message; toast("Écriture impossible : " + e.message, 'err', 7000); }
+    saveSoon(); renderAll();
+  });
+  return writeQ;
+}
+
+/* =========================================================
+   Dossier racine, catégories et documents sur le disque
+   ========================================================= */
+async function pickRoot() {
+  if (!FS_OK) return;
+  try {
+    const h = await window.showDirectoryPicker({id:'ecoute-root', mode:'readwrite', startIn:'documents'});
+    root = h; rootName = h.name; rootOK = true;
+    await idb.set('root', h).catch(() => {});
+    await scanRoot(); toast(`Dossier « ${h.name} » prêt.`);
+  } catch (e) { if (e.name !== 'AbortError') toast('Impossible d’ouvrir ce dossier : ' + e.message, 'err'); }
+}
+// Importe comme catégories les sous-dossiers qui contiennent déjà des documents de l'app, puis scanne les catégories
+async function scanRoot() {
+  if (!root || !(rootOK = await hasPerm(root))) { renderAll(); return; }
+  try {
+    let n = 0;
+    for await (const [name, h] of root.entries()) {
+      if (h.kind !== 'directory' || cats.some(c => c.folder === name) || ++n > 60) continue;
+      let isCat = false;
+      for await (const [, sub] of h.entries()) { if (sub.kind === 'directory' && await exists(sub, SOMMAIRE)) { isCat = true; break; } }
+      if (isCat) cats.push({id: 'c' + Date.now() + Math.random().toString(36).slice(2, 6), name, folder: name, color: COLORS[cats.length % COLORS.length]});
+    }
+    saveCats();
+  } catch (e) { console.warn(e); }
+  await Promise.all(cats.map(scanCat));
+  renderAll();
+}
+async function scanCat(cat) {
+  diskDocs[cat.id] = [];
+  if (!root || !rootOK) return;
+  try {
+    const cdir = await root.getDirectoryHandle(cat.folder);
+    for await (const [name, h] of cdir.entries()) {
+      if (h.kind !== 'directory') continue;
+      const parts = [];
+      for await (const [fn, fh] of h.entries()) if (fh.kind === 'file' && fn !== SOMMAIRE && /^\d{2,3} - .+\.md$/i.test(fn)) parts.push(fn);
+      if (!parts.length && !(await exists(h, SOMMAIRE))) continue;
+      parts.sort();
+      diskDocs[cat.id].push({folder: name, parts, handle: h});
+    }
+    diskDocs[cat.id].sort((a, b) => b.folder.localeCompare(a.folder));
+  } catch (e) { if (e.name !== 'NotFoundError') console.warn(e); }
+}
+const diskOnly = catId => (diskDocs[catId] || []).filter(d => !docs.some(x => x.cat === catId && x.folder === d.folder));
+const knownOnDisk = doc => (diskDocs[doc.cat] || []).some(d => d.folder === doc.folder);
+
+function saveCategory(id, name, color) {
+  name = name.trim(); if (!name) return null;
+  if (id) { const c = catById(id); c.name = name; c.color = color; saveCats(); renderAll(); return c; }
+  let folder = safeName(name), i = 2;
+  while (cats.some(c => c.folder.toLowerCase() === folder.toLowerCase())) folder = `${safeName(name)} (${i++})`;
+  const c = {id: 'c' + Date.now(), name, folder, color};
+  cats.push(c); saveCats(); diskDocs[c.id] = [];
+  return c;
+}
+
+/* =========================================================
+   Démarrage / arrêt
+   ========================================================= */
+async function go(catId = S.curCat, continueKey = S.docMode === 'continue' ? S.continueKey : '') {
+  if (live) return;
+  if (!SR) { toast("Ce navigateur ne propose pas la reconnaissance vocale. Utilisez Chrome, Edge ou Safari.", 'err', 7000); return; }
+  if (root && !rootOK) {          // l'autorisation doit être demandée dans le geste de l'utilisateur
+    rootOK = await hasPerm(root, true);
+    if (rootOK) scanRoot(); else toast("Accès au dossier refusé : les parties seront à télécharger.", 'warn', 6000);
+  }
+  catId = catById(catId).id;
+  const now = Date.now();
+  let doc = null;
+  if (continueKey.startsWith('disk:')) {
+    const d = (diskDocs[catId] || []).find(x => x.folder === continueKey.slice(5));
+    if (d) {
+      doc = newDoc(catId, now); doc.folder = d.folder; doc.diskParts = d.parts.slice(); doc.title = d.folder;
+      try {   // reprend le titre et les lignes du sommaire existant
+        const old = await (await (await d.handle.getFileHandle(SOMMAIRE)).getFile()).text();
+        const t = old.match(/^document:\s*"(.*)"\s*$/m); if (t) doc.title = t[1];
+        const block = (old.split(/^## Parties\s*$/m)[1] || '').split(/^## /m)[0];
+        const items = block.split(/^\d+\.\s+/m).map(x => x.trim()).filter(Boolean);
+        if (items.length === doc.diskParts.length) doc.diskEntries = items;
+      } catch {}
+      docs.unshift(doc);
+    }
+  } else if (continueKey) doc = docs.find(d => String(d.id) === continueKey && d.cat === catId);
+  if (!doc) { doc = newDoc(catId, now); docs.unshift(doc); }
+  else { docs.splice(docs.indexOf(doc), 1); docs.unshift(doc); }
+  doc.parts.push(newPart(now)); doc.updated = now;
+  live = {doc, start: now, from: doc.parts.length - 1};
+  fgLevel = 0; frames.length = 0; hist.length = 0;
+  showView(); saveSoon();
+
+  wantListen = true; vadRuntimeOff = false; setPill('');
+  if (S.vad) {
+    try { await startAudio(); }
+    catch (e) {
+      if (e && (e.name === 'NotAllowedError' || e.name === 'SecurityError')) { toast("Accès au micro refusé. Autorisez le micro pour cette page puis réessayez.", 'err', 7000); stopLive(); return; }
+      toast('Analyse audio indisponible (' + (e.message || e) + ') : la transcription continue sans filtrage audio.', 'warn', 7000);
+    }
+  }
+  if (!wantListen) return;
+  startRecognition(); acquireWake();
+}
+async function stopLive() {
+  if (!live) return;
+  const {doc, start, from} = live;
+  wantListen = false;
+  if (rec) { try { rec.onend = null; rec.stop(); } catch {} rec = null; }
+  recActive = false; stopAudio(); releaseWake(); $('#interim').textContent = '';
+  live = null;
+  const p = doc.parts[doc.parts.length - 1];
+  if (p && p.status === 'open') { if (realSegs(p.segments).length) closePart(p, doc); else doc.parts.pop(); }
+  const added = Math.max(0, doc.parts.length - from);
+  if (added) doc.runs.push({start, end: Date.now()});
+  if (!doc.parts.length) docs.splice(docs.indexOf(doc), 1);
+  saveSoon();
+  if (added) location.hash = '#/c/' + encodeURIComponent(doc.cat); else location.hash = '#/';
+  showView();
+  if (!added) { toast('Aucune phrase retenue pendant cette écoute.'); return; }
+  await Promise.allSettled([...pendingCloses]); await writeQ;
+  const saved = doc.parts.slice(from).filter(x => x.status === 'saved').length;
+  toast(saved ? `${added} partie(s) enregistrée(s) dans ${catById(doc.cat).name} / ${doc.folder}.` : `${added} partie(s) prête(s) à télécharger.`);
+  if (rootOK) scanCat(catById(doc.cat)).then(renderAll);
+}
+
+/* =========================================================
+   Navigation et rendu
+   ========================================================= */
+let view = {name:'home'};
+function route() {
+  const m = location.hash.match(/^#\/c\/(.+)$/);
+  const id = m && decodeURIComponent(m[1]);
+  view = id && cats.some(c => c.id === id) ? {name:'cat', id} : {name:'home'};
+  if (view.name === 'cat' && !live) { S.curCat = id; saveSettings(); }
+  closeNav(); showView(); window.scrollTo(0, 0);
+}
+function openNav() { $('#nav').classList.add('open'); $('#scrim').classList.add('on'); }
+function closeNav() { $('#nav').classList.remove('open'); $('#scrim').classList.remove('on'); }
+function showView() {
+  const isLive = !!live;
+  $('#home').hidden = isLive || view.name !== 'home';
+  $('#catView').hidden = isLive || view.name !== 'cat';
+  $('#live').hidden = !isLive; $('#actionbar').hidden = !isLive; $('#livePill').hidden = !isLive;
+  document.body.classList.toggle('is-live', isLive);
+  renderAll();
+}
+function setPill(st) { $('#livePill').className = 'pill ' + (st || ''); }
+function renderAll() {
+  renderNav();
+  if (live) { renderLive(); $('#topTitle').innerHTML = `<span class="dot" style="--c:${catById(live.doc.cat).color}"></span><span>${esc(catById(live.doc.cat).name)}</span>`; return; }
+  if (view.name === 'cat') renderCat(); else renderHome();
+}
+function renderNav() {
+  const active = live ? live.doc.cat : view.name === 'cat' ? view.id : null;
+  $('[data-nav=home]').classList.toggle('on', !live && view.name === 'home');
+  $('#navCats').innerHTML = cats.map(c => {
+    const n = docsOf(c.id).length + diskOnly(c.id).length;
+    return `<a class="nav-i ${active === c.id ? 'on' : ''}" style="--c:${c.color}" href="#/c/${encodeURIComponent(c.id)}"><span class="dot"></span>${esc(c.name)}<span class="n">${n || ''}</span></a>`;
+  }).join('');
+  $('#navStore').innerHTML = root ? `${IC.disk}<span>${esc(rootName)}${rootOK ? '' : ' (à réautoriser)'}</span>` : `${IC.disk}<span>${FS_OK ? 'Aucun dossier choisi' : 'Stockage dans l’app'}</span>`;
+}
+
+const STATUS = {open:['En cours','open'], summarizing:['Résumé…','summarizing'], saved:['Enregistré','saved'], ready:['À télécharger',''], error:['Erreur','error']};
+function partRow(doc, i) {
+  const p = doc.parts[i], segs = realSegs(p.segments), [lab, cls] = STATUS[p.status] || ['', ''];
+  const end = p.end || (segs.length ? segs[segs.length - 1].t : p.start);
+  return `<li class="topic" data-d="${doc.id}" data-p="${i}"><span class="num">${partNo(doc, i)}</span>
+    <div class="grow"><div class="tt">${esc(p.title || liveTitle(segs) || 'Partie ' + partNo(doc, i))}</div>
+    <div class="tm">${fmtT(p.start)} → ${fmtT(end)} · ${segs.length} interventions${p.status === 'saved' ? ' · ' + esc(p.savedAs) : ''}</div></div>
+    <span class="st ${cls}">${lab}</span></li>`;
+}
+function docCard(doc) {
+  const dur = doc.runs.reduce((a, r) => a + (r.end - r.start), 0);
+  const where = doc.folder && rootOK ? `<span class="chip">${IC.disk}${esc(doc.folder)}</span>` : '<span class="chip">Dans l’app</span>';
+  const prev = doc.diskParts && doc.diskParts.length ? `<li class="topic" data-disk="${esc(doc.folder)}" data-c="${doc.cat}"><span class="num">1–${doc.diskParts.length}</span><div class="grow"><div class="tt">Parties précédentes</div><div class="tm">Déjà sur le disque</div></div></li>` : '';
+  return `<article class="card doc"><header><div class="grow"><b>${esc(docLabel(doc))}</b>
+      <div class="small muted clamp">${doc.parts.length + (doc.diskParts ? doc.diskParts.length : 0)} partie(s)${dur ? ' · ' + fmtDur(dur) : ''}${docSubtitle(doc) ? ' · ' + esc(docSubtitle(doc)) : ''}</div></div>${where}</header>
+    <ol class="topics">${prev}${doc.parts.map((p, i) => partRow(doc, i)).join('')}</ol>
+    <footer>
+      <button class="btn sm primary" data-act="cont" data-d="${doc.id}">${IC.play}Continuer</button>
+      <button class="btn sm" data-act="index" data-d="${doc.id}">${IC.list}Sommaire</button>
+      <button class="btn sm" data-act="zip" data-d="${doc.id}">${IC.dl}.zip</button>
+      <span class="grow"></span>
+      <button class="btn sm ghost danger" data-act="del" data-d="${doc.id}">Retirer</button>
+    </footer></article>`;
+}
+
+function renderHome() {
+  $('#topTitle').innerHTML = '<span>Accueil</span>';
+  const cat = catById(S.curCat);
+  $('#homeCats').innerHTML = cats.map(c => `<button class="cat ${c.id === cat.id ? 'on' : ''}" style="--c:${c.color}" data-cat="${c.id}"><span class="dot"></span>${esc(c.name)}</button>`).join('')
+    + `<button class="cat add" data-cat="+">${IC.plus}Nouvelle</button>`;
+  $('#btnGo').style.setProperty('--c', cat.color);
+  // document : nouveau ou suite
+  if (S.docMode === 'continue' && !S.continueKey) S.docMode = 'new';
+  $$('.segctl button').forEach(b => b.classList.toggle('on', b.dataset.mode === S.docMode));
+  const list = docsOf(cat.id), disk = diskOnly(cat.id);
+  let target = null;
+  if (S.docMode === 'continue') {
+    if (S.continueKey.startsWith('disk:')) { const d = disk.find(x => 'disk:' + x.folder === S.continueKey); if (d) target = {label: d.folder, next: d.parts.length + 1}; }
+    else { const d = list.find(x => String(x.id) === S.continueKey); if (d) target = {label: docLabel(d), next: (d.diskParts ? d.diskParts.length : 0) + d.parts.length + 1}; }
+    if (!target) { S.docMode = 'new'; S.continueKey = ''; }
+  }
+  $('#heroDest').innerHTML = `<span class="dot" style="--c:${cat.color}"></span><b>${esc(cat.name)}</b><span class="muted">›</span>` +
+    (target ? `<span>suite de « ${esc(target.label)} » · partie ${target.next}</span>` : `<span class="muted">nouveau document, découpé par sujet</span>`);
+  let h = '';
+  const rows = [
+    ...list.map(d => ({key: String(d.id), t: docLabel(d), m: `${d.parts.length + (d.diskParts ? d.diskParts.length : 0)} partie(s) · ${fmtD(d.updated || d.created)}${docSubtitle(d) ? ' · ' + docSubtitle(d) : ''}`})),
+    ...disk.map(d => ({key: 'disk:' + d.folder, t: d.folder, m: `${d.parts.length} partie(s) · sur le disque`}))];
+  if (S.docMode === 'new') {
+    h = `<p class="explain">Chaque écoute crée un document dans <b>${esc(cat.name)}</b>. Au lieu d'un énorme fichier, il est découpé en parties (une par sujet), reliées par un sommaire.</p>`;
+  } else {
+    h = `<p class="explain">Les nouvelles parties seront numérotées à la suite du document choisi.</p>`;
+  }
+  if (S.docMode === 'continue' || rows.length) {
+    h += `<div class="list">${rows.length ? rows.map(r => `<button class="row ${S.docMode === 'continue' && S.continueKey === r.key ? 'sel' : ''}" data-key="${esc(r.key)}">${IC.doc}<div class="grow"><div class="t">${esc(r.t)}</div><div class="m">${esc(r.m)}</div></div><span class="eye" data-eye="${esc(r.key)}" role="button" aria-label="Sommaire">${IC.eye}</span></button>`).join('')
+      : `<p class="empty">Aucun document dans ${esc(cat.name)} pour l’instant.</p>`}</div>`;
+    if (S.docMode === 'new' && rows.length) h += `<p class="hint" style="margin:6px 4px 0">Touchez un document pour le continuer au lieu d’en créer un nouveau.</p>`;
+  }
+  $('#docPane').innerHTML = h;
+  // stockage
+  $('#rootName').textContent = root ? rootName + (rootOK ? '' : ' (à réautoriser)') : FS_OK ? 'Aucun dossier choisi' : 'Non disponible sur ce navigateur';
+  $('#btnRoot').textContent = root ? 'Changer' : 'Choisir'; $('#btnRoot').hidden = !FS_OK;
+  const exDoc = target ? target.label : folderNameFor(Date.now());
+  let sp = `<div class="tree"><b>${esc(root ? rootName : 'Racine')}</b>/
+└─ <i>${esc(cat.folder)}</i>/            ← catégorie
+   └─ ${esc(exDoc)}/   ← document
+      ├─ 00 - Sommaire.md
+      ├─ 01 - Premier sujet.md
+      └─ 02 - Sujet suivant.md</div>`;
+  if (root && !rootOK) sp += `<button class="btn" id="btnRegrant" style="margin-top:12px">Réautoriser l'accès à « ${esc(rootName)} »</button>`;
+  else if (!root) sp += `<p class="explain">${FS_OK ? 'Choisissez un dossier (idéalement dédié) : les parties y seront écrites automatiquement.' : 'Ce navigateur ne peut pas écrire dans un dossier : les documents restent dans l’app, à télécharger en .zip (même structure) ou partie par partie.'}</p>`;
+  $('#storePane').innerHTML = sp;
+  // récents
+  const rec = list.slice(0, 2);
+  $('#recent').innerHTML = rec.length ? `<div class="sec-h"><p class="h">Derniers documents · ${esc(cat.name)}</p><a class="btn sm ghost" href="#/c/${encodeURIComponent(cat.id)}">Tout voir</a></div>` + rec.map(docCard).join('') : '';
+}
+
+function renderCat() {
+  const cat = catById(view.id), list = docsOf(cat.id), disk = diskOnly(cat.id);
+  $('#topTitle').innerHTML = `<span class="dot" style="--c:${cat.color}"></span><span>${esc(cat.name)}</span>`;
+  $('#catView').innerHTML = `<div class="cat-head"><span class="dot" style="--c:${cat.color}"></span><h1 class="grow">${esc(cat.name)}</h1>
+      <button class="icon-btn" data-act="editcat" aria-label="Modifier la catégorie">${IC.edit}</button>
+      <button class="btn primary" data-act="gohere" style="--accent:${cat.color};color:#06120d">${IC.play}GO ici</button></div>
+    ${list.length ? list.map(docCard).join('') : `<div class="card empty">Aucun document dans cette catégorie. Appuyez sur « GO ici » pour en créer un.</div>`}
+    ${disk.length ? `<div class="sec-h"><p class="h">Sur le disque (${esc(rootName)} / ${esc(cat.folder)})</p></div><div class="card"><div class="list" style="max-height:none;margin:0">${disk.map(d => `<div class="row">${IC.doc}<div class="grow"><div class="t">${esc(d.folder)}</div><div class="m">${d.parts.length} partie(s)</div></div>
+        <button class="btn sm" data-act="dindex" data-f="${esc(d.folder)}">${IC.list}Sommaire</button><button class="btn sm primary" data-act="dcont" data-f="${esc(d.folder)}">${IC.play}Continuer</button></div>`).join('')}</div></div>` : ''}`;
+}
+
+function renderLive() {
+  if (!live) return;
+  const doc = live.doc, part = curPart(), segs = realSegs(part.segments), cat = catById(doc.cat);
+  $('#nowKicker').innerHTML = `<span class="num">${partNo(doc, doc.parts.length - 1)}</span><span>${esc(docLabel(doc))}</span><span>·</span><span>${segs.length ? 'partie en cours depuis ' + fmtT(segs[0].t) : 'nouvelle partie, en attente de parole'}</span>`;
+  $('#nowTitle').textContent = liveTitle(segs) || (segs.length ? trunc(segs[0].text, 60) : "À l'écoute…");
+  let items = segs.map(s => ({...s, k:'ok'}));
+  if (S.showRejected) items = items.concat(doc.rejected.filter(r => r.t >= part.start).map(r => ({...r, k:'rej'})));
+  items.sort((a, b) => a.t - b.t);
+  const box = $('#lines'), atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 40;
+  box.innerHTML = items.slice(-60).map(s => `<div class="ln ${s.k === 'rej' ? 'rej' : ''}"><time>${fmtT(s.t)}</time><p>${esc(s.text)}${s.k === 'rej' ? ` <em>· ${esc(s.reason)}</em>` : ''}</p></div>`).join('')
+    || '<p class="muted small" style="margin:0">Les phrases retenues apparaîtront ici. Le bruit et les voix lointaines sont écartés.</p>';
+  if (atBottom) box.scrollTop = box.scrollHeight;
+  const doneIdx = doc.parts.map((p, i) => i).slice(0, -1);
+  $('#liveTopicsCard').hidden = !doneIdx.length;
+  $('#liveTopics').innerHTML = doneIdx.map(i => partRow(doc, i)).join('');
+  $('#topTitle').innerHTML = `<span class="dot" style="--c:${cat.color}"></span><span>${esc(cat.name)}</span>`;
+}
+
+/* Dialogue d'une partie */
+let dlgCtx = null;
+function sumHTML(sm) {
+  const L = (t, a) => a && a.length ? `<h4>${t}</h4><ul>${a.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : '';
+  return `<div class="sum">${sm.overview ? `<h4>Résumé</h4><p>${esc(sm.overview)}</p>` : ''}${L('Points clés', sm.keyPoints)}${L('Décisions', sm.decisions)}${L('Actions / à faire', sm.actions)}${L('Questions', sm.questions)}${L('Chiffres & dates', sm.figures)}
+    ${sm.keywords && sm.keywords.length ? `<h4>Mots-clés</h4><div class="kw">${sm.keywords.map(k => `<span>${esc(k)}</span>`).join('')}</div>` : ''}</div>`;
+}
+async function openPart(doc, i, livePeek = false) {
+  const p = doc.parts[i]; if (!p) return;
+  const segs = realSegs(p.segments), n = partNo(doc, i);
+  dlgCtx = {doc, i};
+  $('#dtTitle').textContent = `${n}. ${p.title || liveTitle(segs) || 'Partie ' + n}`;
+  const body = $('#dtBody');
+  let sm = p.summary;
+  if (!sm) {
+    if (!segs.length) { body.innerHTML = '<p class="muted">Pas encore de phrase retenue dans cette partie.</p>'; $('#dtFoot').innerHTML = ''; $('#dlgTopic').showModal(); return; }
+    body.innerHTML = '<p class="muted">Résumé en cours…</p>'; $('#dtFoot').innerHTML = ''; $('#dlgTopic').showModal();
+    sm = livePeek && S.engine === 'claude' ? await makeSummary(segs) : localSummary(segs);
+    if (!$('#dlgTopic').open || dlgCtx.doc !== doc || dlgCtx.i !== i) return;
+  }
+  const end = p.end || (segs.length ? segs[segs.length - 1].t : p.start);
+  body.innerHTML = `<p class="small muted" style="margin:0 0 14px">${esc(catById(doc.cat).name)} › ${esc(docLabel(doc))} · ${fmtT(p.start)} → ${fmtT(end)} · ${segs.length} interventions${p.status === 'saved' ? '<br>Fichier : ' + esc(doc.folder + '/' + p.savedAs) : ''}${livePeek ? ' · aperçu provisoire' : ''}</p>`
+    + sumHTML(sm) + `<details style="margin-top:16px"><summary class="small muted" style="cursor:pointer">Transcription (${segs.length})</summary><div class="lines" style="max-height:none">${segs.map(s => `<div class="ln"><time>${fmtT(s.t)}</time><p>${esc(s.text)}</p></div>`).join('')}</div></details>`;
+  $('#dtFoot').innerHTML = `<button class="btn" data-x="copy">${IC.copy}Copier</button><button class="btn" data-x="dl">${IC.dl}Télécharger</button>${navigator.canShare ? `<button class="btn" data-x="share">${IC.share}Partager</button>` : ''}`;
+  if (!$('#dlgTopic').open) $('#dlgTopic').showModal();
+}
+function preview(title, text, foot = '') {
+  $('#dpTitle').textContent = title;
+  $('#dpBody').textContent = text.length > 40000 ? text.slice(0, 40000) + '\n\n… (aperçu tronqué)' : (text || '(vide)');
+  $('#dpFoot').innerHTML = foot; $('#dpFoot').hidden = !foot;
+  $('#dlgPreview').showModal();
+}
+async function previewDisk(catId, folder) {
+  const d = (diskDocs[catId] || []).find(x => x.folder === folder); if (!d) return;
+  let text = '';
+  try { text = await (await (await d.handle.getFileHandle(SOMMAIRE)).getFile()).text(); }
+  catch { text = 'Pas de sommaire. Parties présentes :\n\n' + d.parts.join('\n'); }
+  preview(folder, text, `<button class="btn primary" data-x="dcont" data-c="${catId}" data-f="${esc(folder)}">${IC.play}Continuer ce document</button>`);
+}
+function docFiles(doc) {
+  const cat = catById(doc.cat), base = `${cat.folder}/${doc.folder || folderNameFor(doc.created)}/`;
+  const files = [{name: base + SOMMAIRE, text: indexMD(doc)}];
+  doc.parts.forEach((p, i) => {
+    if (!realSegs(p.segments).length) return;
+    if (!p.title) p.title = liveTitle(realSegs(p.segments)) || 'Partie';
+    files.push({name: base + (p.savedAs || partFile(doc, i)), text: partMD(doc, i)});
+  });
+  return files;
+}
+
+/* Dialogue catégorie */
+let catEdit = null, catColor = COLORS[0];
+function openCatDialog(id = null) {
+  catEdit = id; const c = id ? catById(id) : null;
+  catColor = c ? c.color : COLORS[cats.length % COLORS.length];
+  $('#dcTitle').textContent = c ? 'Modifier la catégorie' : 'Nouvelle catégorie';
+  $('#catName').value = c ? c.name : '';
+  $('#catSave').textContent = c ? 'Enregistrer' : 'Créer';
+  $('#catDelete').hidden = !c || cats.length <= 1;
+  $('#catHint').textContent = c ? `Dossier sur le disque : ${c.folder} (son nom ne change pas si vous renommez la catégorie).` : 'Un sous-dossier du même nom sera créé dans le dossier racine au premier enregistrement.';
+  renderSwatches(); $('#dlgCat').showModal(); setTimeout(() => $('#catName').focus(), 50);
+}
+function renderSwatches() { $('#catColors').innerHTML = COLORS.map(c => `<button type="button" style="--c:${c}" class="${c === catColor ? 'on' : ''}" data-col="${c}" aria-label="Couleur"></button>`).join(''); }
+
+/* =========================================================
+   Téléchargement, partage, zip
+   ========================================================= */
+function download(blob, name) {
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
+const mdBlob = text => new Blob([text], {type:'text/markdown;charset=utf-8'});
+async function shareFile(text, name) {
+  const file = new File([text], name, {type:'text/markdown'});
+  if (navigator.canShare && navigator.canShare({files:[file]})) { try { await navigator.share({files:[file], title:name}); } catch {} }
+  else download(mdBlob(text), name);
+}
+const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+const crc32 = b => { let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = CRC[(c ^ b[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
+function makeZip(files) {
+  const enc = new TextEncoder(), parts = [], central = []; let off = 0;
+  const d = new Date(), time = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1), date = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+  for (const f of files) {
+    const nm = enc.encode(f.name), data = enc.encode(f.text), crc = crc32(data);
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(8, 0, true);
+    lh.setUint16(10, time, true); lh.setUint16(12, date, true); lh.setUint32(14, crc, true); lh.setUint32(18, data.length, true);
+    lh.setUint32(22, data.length, true); lh.setUint16(26, nm.length, true); lh.setUint16(28, 0, true);
+    parts.push(lh.buffer, nm, data);
+    const ch = new DataView(new ArrayBuffer(46));
+    ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true); ch.setUint16(10, 0, true);
+    ch.setUint16(12, time, true); ch.setUint16(14, date, true); ch.setUint32(16, crc, true); ch.setUint32(20, data.length, true); ch.setUint32(24, data.length, true);
+    ch.setUint16(28, nm.length, true); ch.setUint32(42, off, true);
+    central.push(ch.buffer, nm);
+    off += 30 + nm.length + data.length;
+  }
+  const cdSize = central.reduce((a, b) => a + b.byteLength, 0);
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true);
+  end.setUint32(12, cdSize, true); end.setUint32(16, off, true);
+  return new Blob([...parts, ...central, end.buffer], {type:'application/zip'});
+}
+function sessionFiles(ses) {
+  const used = new Set();
+  return ses.topics.filter(t => realSegs(t.segments).length).map(t => {
+    if (!t.title) t.title = liveTitle(realSegs(t.segments)) || 'sujet';
+    let name = fileNameFor(t), i = 2; while (used.has(name)) name = fileNameFor(t).replace(/\.md$/, ` (${i++}).md`);
+    used.add(name); return {name, text: topicMD(t, ses)};
+  });
+}
+
+/* =========================================================
+   Graphique du niveau sonore
+   ========================================================= */
+const cv = $('#meter'), ctx = cv.getContext('2d');
+function draw() {
+  requestAnimationFrame(draw);
+  if (document.hidden || !live) return;
+  const dpr = window.devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight;
+  if (!w) return;
+  if (cv.width !== Math.round(w * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);
+  const css = getComputedStyle(document.documentElement);
+  const col = {voice: css.getPropertyValue('--accent'), noise: css.getPropertyValue('--warn'), silence: css.getPropertyValue('--line')};
+  if (!analyser) { ctx.fillStyle = css.getPropertyValue('--muted'); ctx.font = '12px system-ui'; ctx.textAlign = 'center'; ctx.fillText('Analyse audio inactive', w / 2, h / 2 + 4); return; }
+  const bw = w / HIST;
+  hist.forEach((f, i) => { const bh = Math.max(2, f.lvl * (h - 6)); ctx.fillStyle = col[f.label]; ctx.fillRect((i + HIST - hist.length) * bw, (h - bh) / 2, Math.max(1, bw - 1), bh); });
+}
+requestAnimationFrame(draw);
+setInterval(() => {
+  if (!live) return;
+  $('#liveClock').textContent = fmtClock(Date.now() - live.start);
+  if (document.hidden) return;
+  const map = {voice:['Voix','voice'], noise:['Bruit ignoré','noise'], silence:['Silence',''], off:['Inactif','']};
+  const [txt, cls] = map[analyser ? curLabel : 'off'], b = $('#vadBadge'); b.textContent = txt; b.className = 'vad ' + cls;
+  const st = analyser && last60(), nOk = live.doc.parts.reduce((a, t) => a + realSegs(t.segments).length, 0);
+  $('#vadStats').textContent = (st ? `Dernière minute : voix ${st.v} % · bruit ${st.n} % · silence ${st.s} % — ` : '') + `${nOk} phrases retenues · ${live.doc.rejected.length} écartées`;
+}, 250);
+
+/* =========================================================
+   Arrière-plan
+   ========================================================= */
+let wakeLock = null;
+async function acquireWake() {
+  if (!S.wakeLock || !wantListen || !('wakeLock' in navigator) || document.hidden) return;
+  try { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => { wakeLock = null; }); } catch {}
+}
+function releaseWake() { if (wakeLock) { wakeLock.release().catch(() => {}); wakeLock = null; } }
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { hiddenAt = Date.now(); saveNow(); return; }
+  if (!wantListen || !live) return;
+  acquireWake();
+  if (audioCtx && audioCtx.state !== 'running') audioCtx.resume().catch(() => {});
+  const away = Date.now() - hiddenAt;
+  if (hiddenAt && away > 15000 && analyser && windowStats(hiddenAt, Date.now()).tot < (away / 50) * 0.2)
+    toast(`L'écoute a été suspendue par le système pendant ~${Math.max(1, Math.round(away / 60000))} min (page en arrière-plan ou écran verrouillé).`, 'warn', 8000);
+  hiddenAt = 0;
+  if (!recActive) startRecognition();
+});
+window.addEventListener('pagehide', saveNow);
+setInterval(() => { if (wantListen && !recActive && Date.now() - lastRecStart > 5000) startRecognition(); }, 4000);
+
+/* =========================================================
+   Réglages (dialogue)
+   ========================================================= */
+function bindSettings() {
+  $$('[data-k]').forEach(el => {
+    const k = el.dataset.k;
+    if (el.type === 'checkbox') el.checked = !!S[k]; else el.value = S[k];
+    el.addEventListener(el.type === 'range' ? 'input' : 'change', () => {
+      const v = el.type === 'checkbox' ? el.checked : (el.type === 'range' || el.type === 'number') ? Number(el.value) : el.value;
+      S[k] = v; saveSettings(); labels();
+      if (k === 'lang' && wantListen) startRecognition();
+      if (k === 'vad' && wantListen) { if (v) startAudio().then(startRecognition).catch(() => {}); else { stopAudio(); startRecognition(); } }
+      if (k === 'wakeLock') v ? acquireWake() : releaseWake();
+      if (k === 'showRejected') renderLive();
+    });
+  });
+  labels();
+}
+function labels() { $('#thrVal').textContent = '×' + S.threshold; $('#distVal').textContent = Math.round(S.distantRatio * 100) + ' % de la voix principale'; }
+
+
+/* =========================================================
+   Événements
+   ========================================================= */
+window.addEventListener('hashchange', route);
+$('#btnMenu').addEventListener('click', openNav);
+$('#scrim').addEventListener('click', closeNav);
+$('#btnGo').addEventListener('click', () => go());
+$('#btnStop').addEventListener('click', stopLive);
+$('#btnNewTopic').addEventListener('click', () => {
+  if (!live) return;
+  if (!realSegs(curPart().segments).length) { toast('La partie en cours est encore vide.'); return; }
+  startNewPart(Date.now(), 'manual'); saveSoon();
+});
+$('#btnPeek').addEventListener('click', () => live && openPart(live.doc, live.doc.parts.length - 1, true));
+$('#btnSettings').addEventListener('click', () => $('#dlgSettings').showModal());
+$('#btnSettings2').addEventListener('click', () => { closeNav(); $('#dlgSettings').showModal(); });
+$('#btnAddCat').addEventListener('click', () => { closeNav(); openCatDialog(); });
+$('#btnRoot').addEventListener('click', pickRoot);
+$$('dialog').forEach(d => d.addEventListener('click', e => { if (e.target === d || e.target.closest('[data-close]')) d.close(); }));
+
+$('#homeCats').addEventListener('click', e => {
+  const b = e.target.closest('[data-cat]'); if (!b) return;
+  if (b.dataset.cat === '+') return openCatDialog();
+  S.curCat = b.dataset.cat; S.docMode = 'new'; S.continueKey = ''; saveSettings(); renderAll();
+  b.scrollIntoView({inline:'nearest', block:'nearest', behavior:'smooth'});
+});
+$$('.segctl button').forEach(b => b.addEventListener('click', () => {
+  S.docMode = b.dataset.mode;
+  if (S.docMode === 'continue' && !S.continueKey) {
+    const first = docsOf(S.curCat)[0], d = diskOnly(S.curCat)[0];
+    S.continueKey = first ? String(first.id) : d ? 'disk:' + d.folder : '';
+    if (!S.continueKey) toast('Aucun document à continuer dans cette catégorie.');
+  }
+  saveSettings(); renderHome();
+}));
+$('#docPane').addEventListener('click', e => {
+  const eye = e.target.closest('[data-eye]');
+  if (eye) {
+    e.stopPropagation(); const k = eye.dataset.eye;
+    if (k.startsWith('disk:')) return previewDisk(S.curCat, k.slice(5));
+    const d = docs.find(x => String(x.id) === k); if (d) preview(docLabel(d), indexMD(d)); return;
+  }
+  const r = e.target.closest('[data-key]'); if (!r) return;
+  if (S.docMode === 'continue' && S.continueKey === r.dataset.key) { S.docMode = 'new'; S.continueKey = ''; }
+  else { S.docMode = 'continue'; S.continueKey = r.dataset.key; }
+  saveSettings(); renderHome();
+});
+$('#storePane').addEventListener('click', async e => {
+  if (!e.target.closest('#btnRegrant')) return;
+  rootOK = await hasPerm(root, true); if (rootOK) await scanRoot(); renderAll();
+});
+async function onDocAction(e) {
+  const b = e.target.closest('[data-act]');
+  if (b) {
+    const doc = docs.find(d => String(d.id) === b.dataset.d), act = b.dataset.act;
+    if (act === 'cont' && doc) { S.curCat = doc.cat; S.docMode = 'continue'; S.continueKey = String(doc.id); saveSettings(); return go(doc.cat, String(doc.id)); }
+    if (act === 'index' && doc) return preview(docLabel(doc), indexMD(doc));
+    if (act === 'zip' && doc) return download(makeZip(docFiles(doc)), `${safeName(catById(doc.cat).folder)} - ${doc.folder || folderNameFor(doc.created)}.zip`);
+    if (act === 'del' && doc && confirm('Retirer ce document de l’app ? Les fichiers déjà écrits sur le disque sont conservés.')) { docs.splice(docs.indexOf(doc), 1); saveNow(); renderAll(); return; }
+    if (act === 'gohere') return go(view.id, '');
+    if (act === 'editcat') return openCatDialog(view.id);
+    if (act === 'dindex') return previewDisk(view.id, b.dataset.f);
+    if (act === 'dcont') return go(view.id, 'disk:' + b.dataset.f);
+    return;
+  }
+  const disk = e.target.closest('[data-disk]');
+  if (disk) return previewDisk(disk.dataset.c, disk.dataset.disk);
+  const li = e.target.closest('.topic[data-d]');
+  if (li) { const doc = docs.find(d => String(d.id) === li.dataset.d); if (doc) openPart(doc, +li.dataset.p); }
+}
+$('#catView').addEventListener('click', onDocAction);
+$('#recent').addEventListener('click', onDocAction);
+$('#liveTopics').addEventListener('click', onDocAction);
+$('#dpFoot').addEventListener('click', e => {
+  const b = e.target.closest('[data-x=dcont]'); if (!b) return;
+  $('#dlgPreview').close(); S.curCat = b.dataset.c; saveSettings(); go(b.dataset.c, 'disk:' + b.dataset.f);
+});
+$('#dtFoot').addEventListener('click', async e => {
+  const b = e.target.closest('[data-x]'); if (!b || !dlgCtx) return;
+  const {doc, i} = dlgCtx, p = doc.parts[i];
+  if (!p.title) p.title = liveTitle(realSegs(p.segments)) || 'Partie';
+  const text = partMD(doc, i), name = p.savedAs || partFile(doc, i);
+  if (b.dataset.x === 'dl') download(mdBlob(text), name);
+  if (b.dataset.x === 'share') shareFile(text, name);
+  if (b.dataset.x === 'copy') (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(() => toast('Copié.'), () => toast('Copie impossible ici.', 'warn'));
+});
+$('#catColors').addEventListener('click', e => { const b = e.target.closest('[data-col]'); if (b) { catColor = b.dataset.col; renderSwatches(); } });
+function submitCat() {
+  const c = saveCategory(catEdit, $('#catName').value, catColor);
+  if (!c) { $('#catName').focus(); return; }
+  $('#dlgCat').close();
+  if (!catEdit) { S.curCat = c.id; S.docMode = 'new'; S.continueKey = ''; saveSettings(); toast(`Catégorie « ${c.name} » créée.`); }
+  renderAll();
+}
+$('#catSave').addEventListener('click', submitCat);
+$('#catForm').addEventListener('submit', e => { e.preventDefault(); submitCat(); });
+$('#catDelete').addEventListener('click', () => {
+  const c = catById(catEdit), n = docsOf(c.id).length;
+  if (!confirm(`Supprimer la catégorie « ${c.name} »${n ? ` et retirer ses ${n} document(s) de l’app` : ''} ? Les fichiers sur le disque sont conservés.`)) return;
+  docs = docs.filter(d => d.cat !== c.id); cats = cats.filter(x => x.id !== c.id); saveCats(); saveNow();
+  if (S.curCat === c.id) S.curCat = cats[0].id; saveSettings();
+  $('#dlgCat').close(); location.hash = '#/'; renderAll();
+});
+$('#btnClearHist').addEventListener('click', () => {
+  if (!confirm('Effacer l’historique de l’app ? Les fichiers enregistrés dans vos dossiers ne sont pas touchés.')) return;
+  docs = live ? [live.doc] : []; saveNow(); renderAll(); toast('Historique effacé.');
+});
+
+/* =========================================================
+   Initialisation
+   ========================================================= */
+(async function init() {
+  bindSettings();
+  try {
+    docs = (await idb.get('docs')) || [];
+    if (!docs.length) {        // reprise des sessions de la version précédente
+      const old = (await idb.get('sessions')) || [];
+      docs = old.map(s => ({...newDoc('general', s.start), parts: s.topics.map(t => ({...t, savedAs: ''})), runs: [{start: s.start, end: s.end || s.start}]}));
+    }
+    for (const d of docs) {
+      if (!catById(d.cat) || !cats.some(c => c.id === d.cat)) d.cat = cats[0].id;
+      d.parts = d.parts.filter(p => realSegs(p.segments).length);
+      for (const p of d.parts) if (p.status === 'open' || p.status === 'summarizing') {
+        const segs = realSegs(p.segments);
+        p.summary = localSummary(segs); p.summary.engine = 'local'; p.title = p.summary.title;
+        p.end = p.end || segs[segs.length - 1].t; p.status = 'ready';
+      }
+    }
+    docs = docs.filter(d => d.parts.length || (d.diskParts && d.diskParts.length));
+  } catch { docs = []; }
+  if (!cats.some(c => c.id === S.curCat)) S.curCat = cats[0].id;
+  route();
+  if (FS_OK) {
+    try { const h = await idb.get('root'); if (h) { root = h; rootName = h.name; rootOK = await hasPerm(h); await scanRoot(); } } catch {}
+  }
+  renderAll();
+  const notes = [];
+  const iOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if (!SR) notes.push("Ce navigateur ne propose pas la reconnaissance vocale (Firefox par exemple). Ouvrez cette page dans Chrome, Edge ou Safari.");
+  if (!window.isSecureContext) notes.push("Le micro n'est accessible que via https:// (ou localhost). Hébergez ce fichier sur un site sécurisé pour l'utiliser sur mobile.");
+  if (iOS) notes.push("Sur iPhone/iPad, Safari coupe le micro si l'écran se verrouille ou si vous changez d'app : laissez la page au premier plan (l'écran reste allumé pendant l'écoute).");
+  if (notes.length) { const b = $('#banner'); b.innerHTML = notes.map(esc).join('<br>'); b.hidden = false; }
+})();
+
+</script>
+</body>
+</html>
