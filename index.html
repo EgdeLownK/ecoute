@@ -573,7 +573,7 @@ function startRecognition() {
       // Safari refuse parfois une relance faite sans toucher l'écran : on demande un toucher au lieu d'arrêter
       if (recEverStarted && wantListen) { askTap(); return; }
       const msg = IN_FRAME ? "Cette page est ouverte dans un aperçu qui bloque le micro. Ouvrez-la directement dans le navigateur, via son adresse en https."
-        : IOS && e.error === 'service-not-allowed' ? "La reconnaissance vocale d'Apple est désactivée : activez Réglages › Général › Clavier › Activer la dictée, puis réessayez."
+        : IOS && e.error === 'service-not-allowed' ? "Service de reconnaissance d'Apple indisponible. Safari a besoin de Siri : activez-le (Réglages › Siri, ou Apple Intelligence et Siri), gardez la dictée activée (Réglages › Général › Clavier) et vérifiez que Temps d'écran n'interdit pas « Siri et Dictée ». Puis fermez l'onglet et réessayez."
         : IOS ? "Micro refusé. Dans Safari, touchez « aA » (ou l'icône à gauche de l'adresse) › Réglages du site web › Microphone › Autoriser, vérifiez que la dictée est activée (Réglages › Général › Clavier), puis rechargez la page."
         : "Accès au micro ou à la reconnaissance vocale refusé. Autorisez le micro pour ce site (icône à gauche de l'adresse), puis réessayez.";
       toast(msg, 'err', 14000);
