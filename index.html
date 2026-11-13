@@ -249,6 +249,7 @@ body.is-live #toasts{bottom:calc(108px + env(safe-area-inset-bottom))}
   <section id="live" hidden>
     <div class="card now">
       <div class="kicker" id="nowKicker"></div>
+      <button class="btn primary" id="btnResume" hidden style="margin-top:12px;width:100%">Reprendre l'écoute</button>
       <h2 id="nowTitle">À l'écoute…</h2>
       <div class="lines" id="lines"></div>
       <div class="interim" id="interim"></div>
@@ -546,6 +547,9 @@ function last60() {
    Reconnaissance vocale
    ========================================================= */
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+const IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const IN_FRAME = (() => { try { return window.self !== window.top; } catch { return true; } })();
+let recEverStarted = false, pausedTap = false;
 let rec = null, wantListen = false, recActive = false, lastRecStart = 0, utterStart = 0, hiddenAt = 0;
 
 function startRecognition() {
@@ -553,7 +557,7 @@ function startRecognition() {
   if (rec) { try { rec.onend = null; rec.abort(); } catch {} }
   const r = new SR(); rec = r;
   r.lang = S.lang; r.continuous = true; r.interimResults = true; r.maxAlternatives = 1;
-  r.onstart = () => { recActive = true; setPill('on'); };
+  r.onstart = () => { recActive = true; recEverStarted = true; pausedTap = false; setPill('on'); $('#btnResume').hidden = true; };
   r.onresult = e => {
     let interim = '';
     for (let i = e.resultIndex; i < e.results.length; i++) {
@@ -566,8 +570,14 @@ function startRecognition() {
   r.onerror = e => {
     if (e.error === 'no-speech' || e.error === 'aborted') return;
     if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
-      toast("Accès au micro ou au service de reconnaissance refusé. Autorisez le micro pour cette page.", 'err', 7000);
-      stopLive(); return;
+      // Safari refuse parfois une relance faite sans toucher l'écran : on demande un toucher au lieu d'arrêter
+      if (recEverStarted && wantListen) { askTap(); return; }
+      const msg = IN_FRAME ? "Cette page est ouverte dans un aperçu qui bloque le micro. Ouvrez-la directement dans le navigateur, via son adresse en https."
+        : IOS && e.error === 'service-not-allowed' ? "La reconnaissance vocale d'Apple est désactivée : activez Réglages › Général › Clavier › Activer la dictée, puis réessayez."
+        : IOS ? "Micro refusé. Dans Safari, touchez « aA » (ou l'icône à gauche de l'adresse) › Réglages du site web › Microphone › Autoriser, vérifiez que la dictée est activée (Réglages › Général › Clavier), puis rechargez la page."
+        : "Accès au micro ou à la reconnaissance vocale refusé. Autorisez le micro pour ce site (icône à gauche de l'adresse), puis réessayez.";
+      toast(msg, 'err', 14000);
+      stopLive(true); return;
     }
     if (e.error === 'audio-capture') {
       if (analyser) { stopAudio(); vadRuntimeOff = true; toast("Cet appareil ne partage pas le micro : analyse audio désactivée, la transcription continue.", 'warn', 7000); }
@@ -580,7 +590,7 @@ function startRecognition() {
   r.onend = () => {
     recActive = false;
     if (rec !== r) return;
-    if (wantListen) {
+    if (wantListen && !pausedTap) {
       const wait = Date.now() - lastRecStart < 1500 ? 1500 : 150;
       setTimeout(() => { if (wantListen && rec === r) startRecognition(); }, wait);
     }
@@ -1000,18 +1010,25 @@ async function go(catId = S.curCat, continueKey = S.docMode === 'continue' ? S.c
   fgLevel = 0; frames.length = 0; hist.length = 0;
   showView(); saveSoon();
 
-  wantListen = true; vadRuntimeOff = false; setPill('');
-  if (S.vad) {
+  // La reconnaissance démarre tout de suite, pendant le toucher : Safari l'exige.
+  wantListen = true; vadRuntimeOff = IOS; recEverStarted = false; pausedTap = false; setPill('');
+  startRecognition(); acquireWake();
+  // Sur iPhone/iPad, l'analyse audio n'est pas lancée : Safari ne partage pas le micro avec la reconnaissance vocale.
+  if (S.vad && !IOS) {
     try { await startAudio(); }
     catch (e) {
-      if (e && (e.name === 'NotAllowedError' || e.name === 'SecurityError')) { toast("Accès au micro refusé. Autorisez le micro pour cette page puis réessayez.", 'err', 7000); stopLive(); return; }
+      if (!wantListen) return;
+      if (e && (e.name === 'NotAllowedError' || e.name === 'SecurityError')) { toast("Accès au micro refusé. Autorisez le micro pour ce site puis réessayez.", 'err', 9000); stopLive(true); return; }
       toast('Analyse audio indisponible (' + (e.message || e) + ') : la transcription continue sans filtrage audio.', 'warn', 7000);
     }
   }
-  if (!wantListen) return;
-  startRecognition(); acquireWake();
 }
-async function stopLive() {
+function askTap() {
+  pausedTap = true; recActive = false; setPill('warn');
+  const b = $('#btnResume'); if (b) b.hidden = false;
+  toast("Le navigateur a mis l'écoute en pause : touchez « Reprendre l'écoute ».", 'warn', 7000);
+}
+async function stopLive(silent = false) {
   if (!live) return;
   const {doc, start, from} = live;
   wantListen = false;
@@ -1026,7 +1043,7 @@ async function stopLive() {
   saveSoon();
   if (added) location.hash = '#/c/' + encodeURIComponent(doc.cat); else location.hash = '#/';
   showView();
-  if (!added) { toast('Aucune phrase retenue pendant cette écoute.'); return; }
+  if (!added) { if (!silent) toast('Aucune phrase retenue pendant cette écoute.'); return; }
   await Promise.allSettled([...pendingCloses]); await writeQ;
   const saved = doc.parts.slice(from).filter(x => x.status === 'saved').length;
   toast(saved ? `${added} partie(s) enregistrée(s) dans ${catById(doc.cat).name} / ${doc.folder}.` : `${added} partie(s) prête(s) à télécharger.`);
@@ -1332,10 +1349,10 @@ document.addEventListener('visibilitychange', () => {
   if (hiddenAt && away > 15000 && analyser && windowStats(hiddenAt, Date.now()).tot < (away / 50) * 0.2)
     toast(`L'écoute a été suspendue par le système pendant ~${Math.max(1, Math.round(away / 60000))} min (page en arrière-plan ou écran verrouillé).`, 'warn', 8000);
   hiddenAt = 0;
-  if (!recActive) startRecognition();
+  if (!recActive && !pausedTap) startRecognition();
 });
 window.addEventListener('pagehide', saveNow);
-setInterval(() => { if (wantListen && !recActive && Date.now() - lastRecStart > 5000) startRecognition(); }, 4000);
+setInterval(() => { if (wantListen && !pausedTap && !recActive && Date.now() - lastRecStart > 5000) startRecognition(); }, 4000);
 
 /* =========================================================
    Réglages (dialogue)
@@ -1365,7 +1382,8 @@ window.addEventListener('hashchange', route);
 $('#btnMenu').addEventListener('click', openNav);
 $('#scrim').addEventListener('click', closeNav);
 $('#btnGo').addEventListener('click', () => go());
-$('#btnStop').addEventListener('click', stopLive);
+$('#btnStop').addEventListener('click', () => stopLive());
+$('#btnResume').addEventListener('click', () => { pausedTap = false; $('#btnResume').hidden = true; setPill(''); startRecognition(); acquireWake(); });
 $('#btnNewTopic').addEventListener('click', () => {
   if (!live) return;
   if (!realSegs(curPart().segments).length) { toast('La partie en cours est encore vide.'); return; }
@@ -1498,7 +1516,8 @@ $('#btnClearHist').addEventListener('click', () => {
   const iOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   if (!SR) notes.push("Ce navigateur ne propose pas la reconnaissance vocale (Firefox par exemple). Ouvrez cette page dans Chrome, Edge ou Safari.");
   if (!window.isSecureContext) notes.push("Le micro n'est accessible que via https:// (ou localhost). Hébergez ce fichier sur un site sécurisé pour l'utiliser sur mobile.");
-  if (iOS) notes.push("Sur iPhone/iPad, Safari coupe le micro si l'écran se verrouille ou si vous changez d'app : laissez la page au premier plan (l'écran reste allumé pendant l'écoute).");
+  if (iOS) notes.push("Sur iPhone/iPad, Safari coupe le micro si l'écran se verrouille ou si vous changez d'app : laissez la page au premier plan (l'écran reste allumé pendant l'écoute). Le filtrage du bruit repose ici sur la reconnaissance d'Apple et sur le tri du texte : Safari ne permet pas l'analyse audio en parallèle.");
+  if (IN_FRAME) notes.push("Cette page est affichée dans un aperçu : le micro y est souvent bloqué. Pour l'utiliser, ouvrez-la directement via son adresse en https.");
   if (notes.length) { const b = $('#banner'); b.innerHTML = notes.map(esc).join('<br>'); b.hidden = false; }
 })();
 
