@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diagnostic reconnaissance vocale</title>
+<style>
+body{font:16px/1.45 system-ui,-apple-system,sans-serif;margin:0;padding:16px;background:#f3f4f6;color:#121518}
+h1{font-size:20px;margin:0 0 4px}
+p{margin:0 0 14px;color:#5f6873;font-size:14px}
+.grid{display:grid;gap:10px;margin-bottom:14px}
+button{font:inherit;font-weight:600;padding:14px;border-radius:12px;border:1px solid #d6dae0;background:#fff;text-align:left}
+button small{display:block;font-weight:400;color:#5f6873;font-size:13px}
+button.ok{border-color:#10966a;background:#e8f7f0}
+button.ko{border-color:#d03b3b;background:#fdeeee}
+#log{background:#121518;color:#d8f5e8;font:12.5px/1.5 ui-monospace,Menlo,monospace;padding:12px;border-radius:12px;white-space:pre-wrap;word-break:break-word;min-height:120px}
+.row{display:flex;gap:8px;margin-bottom:10px}
+.row button{flex:1;text-align:center;padding:10px}
+</style>
+</head>
+<body>
+<h1>Diagnostic de la reconnaissance vocale</h1>
+<p>Touchez chaque test l'un après l'autre et dites une phrase après chacun. Ensuite, touchez « Copier le rapport » et collez-le dans la conversation.</p>
+<div class="grid" id="tests"></div>
+<div class="row"><button id="mic">Tester le micro seul</button><button id="copy">Copier le rapport</button></div>
+<div id="log"></div>
+<script>
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+const logEl = document.getElementById('log'); const lines = [];
+const t0 = Date.now();
+function log(s) { lines.push(`[${((Date.now() - t0) / 1000).toFixed(1)}s] ${s}`); logEl.textContent = lines.join('\n'); }
+log('UA: ' + navigator.userAgent);
+log('langue système: ' + navigator.language + ' | https: ' + window.isSecureContext + ' | écran d\'accueil: ' + (navigator.standalone === true) + ' | dans un cadre: ' + (window.self !== window.top));
+log('SpeechRecognition: ' + (window.SpeechRecognition ? 'oui' : 'non') + ' | webkitSpeechRecognition: ' + (window.webkitSpeechRecognition ? 'oui' : 'non'));
+const TESTS = [
+  {id:'A', label:'A. Comme l\'app', sub:'fr-FR, continu, résultats partiels', lang:'fr-FR', continuous:true, interim:true},
+  {id:'B', label:'B. Sans langue imposée', sub:'langue du système, continu', lang:null, continuous:true, interim:true},
+  {id:'C', label:'C. Phrase unique en français', sub:'fr-FR, non continu', lang:'fr-FR', continuous:false, interim:false},
+  {id:'D', label:'D. Anglais', sub:'en-US, non continu', lang:'en-US', continuous:false, interim:false},
+  {id:'E', label:'E. Format « fr_FR »', sub:'fr_FR, non continu', lang:'fr_FR', continuous:false, interim:false}];
+let cur = null;
+const box = document.getElementById('tests');
+TESTS.forEach(t => {
+  const b = document.createElement('button'); b.innerHTML = `${t.label}<small>${t.sub}</small>`; box.appendChild(b);
+  b.onclick = () => {
+    if (!SR) { log('Pas de reconnaissance vocale dans ce navigateur.'); return; }
+    if (cur) { try { cur.abort(); } catch {} }
+    const r = new SR(); cur = r;
+    if (t.lang) r.lang = t.lang; r.continuous = t.continuous; r.interimResults = t.interim;
+    log(`--- Test ${t.id} : lang=${t.lang || '(défaut)'} continuous=${t.continuous}`);
+    r.onstart = () => log(`${t.id} start`);
+    r.onaudiostart = () => log(`${t.id} audiostart`);
+    r.onspeechstart = () => log(`${t.id} speechstart`);
+    r.onresult = e => { const res = e.results[e.results.length - 1]; log(`${t.id} résultat${res.isFinal ? ' final' : ''} : « ${res[0].transcript} »`); if (res.isFinal) b.className = 'ok'; };
+    r.onerror = e => { log(`${t.id} ERREUR : ${e.error}${e.message ? ' (' + e.message + ')' : ''}`); b.className = 'ko'; };
+    r.onend = () => log(`${t.id} end`);
+    try { r.start(); log(`${t.id} start() appelé`); } catch (err) { log(`${t.id} exception : ${err.name} ${err.message}`); b.className = 'ko'; }
+    if (!t.continuous) return;
+    setTimeout(() => { if (cur === r) { try { r.stop(); } catch {} } }, 8000);
+  };
+});
+document.getElementById('mic').onclick = async () => {
+  try { const s = await navigator.mediaDevices.getUserMedia({audio:true}); log('Micro seul : OK (' + s.getAudioTracks()[0].label + ')'); s.getTracks().forEach(x => x.stop()); }
+  catch (e) { log('Micro seul : ERREUR ' + e.name + ' ' + e.message); }
+};
+document.getElementById('copy').onclick = () => {
+  navigator.clipboard.writeText(lines.join('\n')).then(() => log('(rapport copié)'), () => log('(copie impossible : faites une capture d\'écran)'));
+};
+</script>
+</body>
+</html>
