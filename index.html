@@ -215,13 +215,54 @@ body.is-live #toasts{bottom:calc(108px + env(safe-area-inset-bottom))}
 .blk>summary{cursor:pointer;font-size:13px;color:var(--muted)}
 .blk .notes{max-height:none}
 .cat-head h1{line-height:1.15}
+/* barre d'onglets, mini-barre du direct */
+:root{--tabh:calc(62px + env(safe-area-inset-bottom))}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:12;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:color-mix(in srgb,var(--panel) 90%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-top:1px solid var(--line);padding:6px 10px calc(6px + env(safe-area-inset-bottom))}
+.tabbar a{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;border-radius:12px;text-decoration:none;color:var(--muted);font-size:11.5px;font-weight:600;font-variant-numeric:tabular-nums}
+.tabbar a.on{color:var(--text);background:var(--panel2)}
+.tabbar a.on svg{color:var(--accent)}
+.tabbar .ti{position:relative;display:grid}
+.tabbar .rdot{position:absolute;top:-2px;right:-5px;width:9px;height:9px;border-radius:50%;background:var(--danger);display:none;animation:blink 1.2s infinite}
+.tabbar.rec .rdot{display:block}
+.tabbar.rec [data-tab=direct],.tabbar.rec [data-tab=direct] svg{color:var(--danger)}
+.tabbar .badge{position:absolute;top:-7px;right:-14px;font-size:10px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--panel2);border:1px solid var(--line);color:var(--muted);display:grid;place-items:center;font-weight:700}
+.tabbar .badge:empty{display:none}
+main{padding-bottom:calc(var(--tabh) + 24px)}
+body.is-live main{padding-bottom:calc(var(--tabh) + 100px)}
+body.has-mini main{padding-bottom:calc(var(--tabh) + 92px)}
+.actionbar{bottom:var(--tabh)!important;padding:10px 16px!important}
+#toasts{bottom:calc(var(--tabh) + 16px)}
+body.is-live #toasts{bottom:calc(var(--tabh) + 96px)}
+body.has-mini #toasts{bottom:calc(var(--tabh) + 86px)}
+.minilive{position:fixed;left:12px;right:12px;bottom:calc(var(--tabh) + 10px);z-index:11;display:flex;align-items:center;gap:12px;padding:10px 10px 10px 16px;border-radius:16px;background:var(--panel);border:1px solid color-mix(in srgb,var(--danger) 45%,var(--line));box-shadow:0 10px 30px rgba(0,0,0,.25);cursor:pointer;max-width:736px;margin:0 auto}
+.minilive .mdot{width:10px;height:10px;border-radius:50%;background:var(--danger);animation:blink 1.2s infinite;flex:none}
+.minilive .mt{font-weight:650;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.minilive .ms{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.minilive .mclock{font-variant-numeric:tabular-nums;font-weight:650;font-size:14px}
+.mstop{width:40px;height:40px;border-radius:50%;border:0;background:var(--danger);color:#fff;display:grid;place-items:center;flex:none}
+.mstop svg{width:16px;height:16px;fill:currentColor;stroke:none}
+#livePill{cursor:pointer}
+@media(min-width:1000px){:root{--tabh:0px}.tabbar{display:none}.minilive{left:calc(var(--nav) + 24px);right:24px}}
+.go.busy{font-size:clamp(20px,6vw,26px);letter-spacing:.08em}
+.idle{text-align:center;padding:34px 20px}
+.idle .ic{width:64px;height:64px;border-radius:20px;background:var(--panel2);display:grid;place-items:center;margin:0 auto 14px;color:var(--muted)}
+.idle .ic svg{width:30px;height:30px}
+.idle h2{margin:0 0 6px;font-size:20px}
+.idle p{margin:0 auto 18px;max-width:380px}
+a.cat{text-decoration:none;color:var(--text)}
+.cat .n{font-size:12px;color:var(--muted);font-weight:500}
+.day{margin:20px 4px 10px}
+.search{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:2px 0 4px;font:inherit;color:var(--text);-webkit-appearance:none;appearance:none}
+.search:focus{outline:2px solid color-mix(in srgb,var(--accent) 50%,transparent);outline-offset:1px}
 .banner{font-size:13px;padding:10px 12px;border-radius:12px;background:color-mix(in srgb,var(--warn) 12%,var(--panel));border:1px solid color-mix(in srgb,var(--warn) 40%,var(--line));margin-bottom:14px}
 </style>
 </head>
 <body>
 <nav class="nav" id="nav" aria-label="Navigation">
   <div class="logo"><i><svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></i>Écoute</div>
-  <a class="nav-i" href="#/" data-nav="home"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Accueil</a>
+  <a class="nav-i" href="#/" data-nav="home"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10 8.5v7l6-3.5z"/></svg>Accueil</a>
+  <a class="nav-i" href="#/direct" data-nav="direct"><svg viewBox="0 0 24 24"><path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2"/></svg>Direct<span class="n" id="navLive"></span></a>
+  <a class="nav-i" href="#/enregistrements" data-nav="recs"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg>Enregistrements<span class="n" id="navRecCount"></span></a>
   <div class="nav-sec"><span>Catégories</span><button id="btnAddCat" aria-label="Nouvelle catégorie"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button></div>
   <div id="navCats"></div>
   <div class="nav-foot">
@@ -234,7 +275,7 @@ body.is-live #toasts{bottom:calc(108px + env(safe-area-inset-bottom))}
 <header class="top"><div class="in">
   <button class="icon-btn" id="btnMenu" aria-label="Menu"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
   <div class="ttl" id="topTitle"></div>
-  <span class="pill" id="livePill" hidden><span class="d"></span><span id="liveClock">00:00</span></span>
+  <span class="pill" id="livePill" hidden role="button" title="Voir le direct"><span class="d"></span><span id="liveClock">00:00</span></span>
   <button class="icon-btn" id="btnSettings" aria-label="Réglages"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
 </div></header>
 
@@ -272,6 +313,8 @@ body.is-live #toasts{bottom:calc(108px + env(safe-area-inset-bottom))}
 
   <!-- ÉCOUTE -->
   <section id="live" hidden>
+    <div id="liveOff"></div>
+    <div id="liveOn">
     <div class="card now">
       <div class="kicker" id="nowKicker"></div>
       <button class="btn primary" id="btnResume" hidden style="margin-top:12px;width:100%">Reprendre l'écoute</button>
@@ -292,9 +335,20 @@ body.is-live #toasts{bottom:calc(108px + env(safe-area-inset-bottom))}
       <p class="h">Parties terminées</p>
       <ol class="topics" id="liveTopics"></ol>
     </div>
+    </div>
   </section>
 </main>
 
+<div class="minilive" id="miniLive" hidden role="button" tabindex="0" aria-label="Voir le direct">
+  <span class="mdot"></span><div class="grow"><div class="mt" id="miniTitle"></div><div class="ms" id="miniSub"></div></div>
+  <span class="mclock" id="miniClock">00:00</span>
+  <button class="mstop" id="miniStop" aria-label="Arrêter l'écoute"><svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg></button>
+</div>
+<nav class="tabbar" id="tabbar" aria-label="Sections">
+  <a href="#/" data-tab="home"><span class="ti"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10 8.5v7l6-3.5z"/></svg></span><span>Accueil</span></a>
+  <a href="#/direct" data-tab="direct"><span class="ti"><svg viewBox="0 0 24 24"><path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2"/></svg><i class="rdot"></i></span><span id="tabDirectLbl">Direct</span></a>
+  <a href="#/enregistrements" data-tab="recs"><span class="ti"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg><b class="badge" id="tabRecCount"></b></span><span>Enregistrements</span></a>
+</nav>
 <div class="actionbar" id="actionbar" hidden><div class="in">
   <button class="btn" id="btnNewTopic"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Nouvelle partie</button>
   <button class="stop" id="btnStop" aria-label="Arrêter"><svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg></button>
@@ -1238,7 +1292,7 @@ function saveCategory(id, name, color, type) {
    Démarrage / arrêt
    ========================================================= */
 async function go(catId = S.curCat, continueKey = S.docMode === 'continue' ? S.continueKey : '') {
-  if (live) return;
+  if (live) { location.hash = '#/direct'; return; }
   if (!SR) { toast("Ce navigateur ne propose pas la reconnaissance vocale. Utilisez Chrome, Edge ou Safari.", 'err', 7000); return; }
   if (root && !rootOK) {          // l'autorisation doit être demandée dans le geste de l'utilisateur
     rootOK = await hasPerm(root, true);
@@ -1270,7 +1324,8 @@ async function go(catId = S.curCat, continueKey = S.docMode === 'continue' ? S.c
   doc.parts.push(newPart(now)); doc.updated = now;
   live = {doc, start: now, from: doc.parts.length - 1, buf: [], busy: false, lastNotes: 0, stopping: false};
   fgLevel = 0; frames.length = 0; hist.length = 0;
-  showView(); saveSoon();
+  if (location.hash === '#/direct') showView(); else location.hash = '#/direct';
+  saveSoon();
 
   // La reconnaissance démarre tout de suite, pendant le toucher : Safari l'exige.
   wantListen = true; vadRuntimeOff = IOS; recEverStarted = false; pausedTap = false; setPill('');
@@ -1311,8 +1366,8 @@ async function stopLive(silent = false) {
   if (added) doc.runs.push({start, end: Date.now()});
   if (!doc.parts.length) docs.splice(docs.indexOf(doc), 1);
   saveSoon();
-  location.hash = added ? '#/c/' + encodeURIComponent(doc.cat) : '#/';
-  showView();
+  const dest = added ? '#/enregistrements/' + encodeURIComponent(doc.cat) : '#/';
+  if (location.hash === dest) showView(); else location.hash = dest;
   if (!added) { if (!silent) toast('Aucune phrase retenue pendant cette écoute.'); return; }
   if (hasKey()) toast('Rédaction des comptes rendus en cours…', '', 4000);
   await after.catch(() => {});
@@ -1329,35 +1384,68 @@ async function stopLive(silent = false) {
    Navigation et rendu
    ========================================================= */
 let view = {name:'home'};
+// #/ accueil · #/direct · #/enregistrements[/catégorie]  (#/c/… reste accepté)
 function route() {
-  const m = location.hash.match(/^#\/c\/(.+)$/);
-  const id = m && decodeURIComponent(m[1]);
-  view = id && cats.some(c => c.id === id) ? {name:'cat', id} : {name:'home'};
-  if (view.name === 'cat' && !live) { S.curCat = id; saveSettings(); }
+  const h = location.hash; let m;
+  if (/^#\/direct\/?$/.test(h)) view = {name:'direct'};
+  else if ((m = h.match(/^#\/(?:enregistrements|c)(?:\/(.+))?$/))) { const id = m[1] && decodeURIComponent(m[1]); view = {name:'recs', id: id && cats.some(c => c.id === id) ? id : null}; }
+  else view = {name:'home'};
+  if (view.name === 'recs' && view.id && !live) { S.curCat = view.id; saveSettings(); }
   closeNav(); showView(); window.scrollTo(0, 0);
 }
 function openNav() { $('#nav').classList.add('open'); $('#scrim').classList.add('on'); }
 function closeNav() { $('#nav').classList.remove('open'); $('#scrim').classList.remove('on'); }
 function showView() {
-  const isLive = !!live;
-  $('#home').hidden = isLive || view.name !== 'home';
-  $('#catView').hidden = isLive || view.name !== 'cat';
-  $('#live').hidden = !isLive; $('#actionbar').hidden = !isLive; $('#livePill').hidden = !isLive;
-  document.body.classList.toggle('is-live', isLive);
+  const isLive = !!live, v = view.name;
+  $('#home').hidden = v !== 'home';
+  $('#catView').hidden = v !== 'recs';
+  $('#live').hidden = v !== 'direct';
+  $('#actionbar').hidden = !(isLive && v === 'direct');
+  $('#miniLive').hidden = !(isLive && v !== 'direct');
+  $('#livePill').hidden = !isLive;
+  document.body.classList.toggle('is-live', isLive && v === 'direct');
+  document.body.classList.toggle('has-mini', isLive && v !== 'direct');
   renderAll();
 }
 function setPill(st) { $('#livePill').className = 'pill ' + (st || ''); }
 function renderAll() {
-  renderNav();
-  if (live) { renderLive(); $('#topTitle').innerHTML = `<span class="dot" style="--c:${catById(live.doc.cat).color}"></span><span>${esc(catById(live.doc.cat).name)}</span>`; return; }
-  if (view.name === 'cat') renderCat(); else renderHome();
+  renderNav(); renderTabs(); renderMini();
+  if (view.name === 'direct') {
+    $('#liveOn').hidden = !live; $('#liveOff').hidden = !!live;
+    if (live) renderLive(); else renderIdle();
+  } else if (view.name === 'recs') { if (document.activeElement && document.activeElement.id === 'recSearch') renderRecList(); else renderRecs(); }
+  else if (!(document.activeElement && document.activeElement.id === 'srcInput')) renderHome();
 }
+function renderTabs() {
+  $$('#tabbar [data-tab]').forEach(a => a.classList.toggle('on', a.dataset.tab === view.name));
+  $('#tabbar').classList.toggle('rec', !!live);
+  $('#tabDirectLbl').textContent = live ? fmtClock(Date.now() - live.start) : 'Direct';
+  $('#tabRecCount').textContent = docs.length ? (docs.length > 99 ? '99+' : docs.length) : '';
+}
+function renderMini() {
+  if (!live) return;
+  const doc = live.doc, part = curPart(), cat = catById(doc.cat);
+  $('#miniTitle').textContent = part.label || liveTitle(realSegs(part.segments)) || "À l'écoute…";
+  $('#miniSub').textContent = `${cat.name} · partie ${partNo(doc, doc.parts.length - 1)} · ${part.notes.length ? part.notes.length + ' notes' : realSegs(part.segments).length + ' phrases'}`;
+}
+function renderIdle() {
+  const cat = catById(S.curCat), last = docs[0];
+  $('#topTitle').innerHTML = '<span>Direct</span>';
+  $('#liveOff').innerHTML = `<div class="card idle"><div class="ic"><svg viewBox="0 0 24 24"><path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2"/></svg></div>
+      <h2>Aucune écoute en cours</h2>
+      <p class="muted">Lancez une écoute : la transcription, les notes et les parties apparaîtront ici en temps réel.</p>
+      <button class="btn primary" data-act="startdirect" style="--accent:${cat.color};color:#06120d">${IC.play}GO · ${esc(cat.name)}</button></div>
+    ${last ? `<div class="sec-h"><p class="h">Dernier enregistrement</p><a class="btn sm ghost" href="#/enregistrements">Tout voir</a></div>${docCard(last)}` : ''}`;
+}
+
 function renderNav() {
-  const active = live ? live.doc.cat : view.name === 'cat' ? view.id : null;
-  $('[data-nav=home]').classList.toggle('on', !live && view.name === 'home');
+  const active = view.name === 'recs' ? view.id : null;
+  $$('[data-nav]').forEach(a => a.classList.toggle('on', a.dataset.nav === view.name && !(view.name === 'recs' && view.id)));
+  $('#navLive').innerHTML = live ? '<span style="color:var(--danger)">● en cours</span>' : '';
+  $('#navRecCount').textContent = docs.length || '';
   $('#navCats').innerHTML = cats.map(c => {
     const n = docsOf(c.id).length + diskOnly(c.id).length;
-    return `<a class="nav-i ${active === c.id ? 'on' : ''}" style="--c:${c.color}" href="#/c/${encodeURIComponent(c.id)}"><span class="dot"></span>${esc(c.name)}<span class="n">${n || ''}</span></a>`;
+    return `<a class="nav-i ${active === c.id ? 'on' : ''}" style="--c:${c.color}" href="#/enregistrements/${encodeURIComponent(c.id)}"><span class="dot"></span>${esc(c.name)}<span class="n">${n || ''}</span></a>`;
   }).join('');
   $('#navStore').innerHTML = root ? `${IC.disk}<span>${esc(rootName)}${rootOK ? '' : ' (à réautoriser)'}</span>` : `${IC.disk}<span>${FS_OK ? 'Aucun dossier choisi' : 'Stockage dans l’app'}</span>`;
 }
@@ -1382,7 +1470,7 @@ function docCard(doc) {
       <div class="small muted clamp">${type.label}${doc.source ? ' · ' + esc(doc.source) : ''} · ${doc.parts.length + (doc.diskParts ? doc.diskParts.length : 0)} partie(s)${dur ? ' · ' + fmtDur(dur) : ''}</div>${syn}</div>${where}</header>
     <ol class="topics">${prev}${doc.parts.map((p, i) => partRow(doc, i)).join('')}</ol>
     <footer>
-      <button class="btn sm primary" data-act="cont" data-d="${doc.id}">${IC.play}Continuer</button>
+      ${live && live.doc === doc ? '<a class="btn sm primary" href="#/direct" style="--accent:var(--danger);color:#fff">● En direct</a>' : `<button class="btn sm primary" data-act="cont" data-d="${doc.id}">${IC.play}Continuer</button>`}
       <button class="btn sm" data-act="index" data-d="${doc.id}">${IC.list}Sommaire</button>
       <button class="btn sm" data-act="zip" data-d="${doc.id}">${IC.dl}.zip</button>
       <span class="grow"></span>
@@ -1395,7 +1483,8 @@ function renderHome() {
   const cat = catById(S.curCat), type = TYPES[cat.type] || TYPES.podcast;
   $('#homeCats').innerHTML = cats.map(c => `<button class="cat ${c.id === cat.id ? 'on' : ''}" style="--c:${c.color}" data-cat="${c.id}"><span class="dot"></span>${esc(c.name)}</button>`).join('')
     + `<button class="cat add" data-cat="+">${IC.plus}Nouvelle</button>`;
-  $('#btnGo').style.setProperty('--c', cat.color);
+  $('#btnGo').style.setProperty('--c', live ? '#ef6b6b' : cat.color);
+  $('#btnGo').textContent = live ? 'EN COURS' : 'GO'; $('#btnGo').classList.toggle('busy', !!live);
   if (S.docMode === 'continue' && !S.continueKey) S.docMode = 'new';
   $$('.segctl button').forEach(b => b.classList.toggle('on', b.dataset.mode === S.docMode));
   const list = docsOf(cat.id), disk = diskOnly(cat.id);
@@ -1405,7 +1494,7 @@ function renderHome() {
     else { const d = list.find(x => String(x.id) === S.continueKey); if (d) target = {label: docLabel(d), next: (d.diskParts ? d.diskParts.length : 0) + d.parts.length + 1}; }
     if (!target) { S.docMode = 'new'; S.continueKey = ''; }
   }
-  $('#heroDest').innerHTML = `<span class="dot" style="--c:${cat.color}"></span><b>${esc(cat.name)}</b><span class="muted">›</span>` +
+  $('#heroDest').innerHTML = live ? `<span class="dot" style="--c:var(--danger)"></span><b>Écoute en cours</b><span class="muted">· ${esc(catById(live.doc.cat).name)} · touchez pour voir le direct</span>` : `<span class="dot" style="--c:${cat.color}"></span><b>${esc(cat.name)}</b><span class="muted">›</span>` +
     (target ? `<span>suite de « ${esc(target.label)} » · partie ${target.next}</span>` : `<span class="muted">nouveau document · ${esc(type.label)}</span>`);
   let h = '';
   if (!hasKey()) h += `<div class="keywarn">${IC.edit}<div class="grow"><b>Clé API manquante.</b> Sans elle, l'app garde seulement la transcription : pas de notes ni de compte rendu.</div><button class="btn sm primary" data-act="settings">Ajouter</button></div>`;
@@ -1437,23 +1526,41 @@ function renderHome() {
   if (root && !rootOK) sp += `<button class="btn" id="btnRegrant" style="margin-top:12px">Réautoriser l'accès à « ${esc(rootName)} »</button>`;
   else if (!root) sp += `<p class="explain">${FS_OK ? 'Choisissez un dossier (idéalement dédié) : les parties y seront écrites automatiquement.' : 'Ce navigateur ne peut pas écrire dans un dossier : les documents restent dans l’app, à télécharger en .zip (même structure) ou partie par partie.'}</p>`;
   $('#storePane').innerHTML = sp;
-  const rec = list.slice(0, 2);
-  $('#recent').innerHTML = rec.length ? `<div class="sec-h"><p class="h">Derniers documents · ${esc(cat.name)}</p><a class="btn sm ghost" href="#/c/${encodeURIComponent(cat.id)}">Tout voir</a></div>` + rec.map(docCard).join('') : '';
+  $('#recent').innerHTML = '';
 }
 
-function renderCat() {
-  const cat = catById(view.id), list = docsOf(cat.id), disk = diskOnly(cat.id);
-  $('#topTitle').innerHTML = `<span class="dot" style="--c:${cat.color}"></span><span>${esc(cat.name)}</span>`;
-  $('#catView').innerHTML = `<div class="cat-head"><span class="dot" style="--c:${cat.color}"></span><div class="grow"><h1>${esc(cat.name)}</h1><div class="small muted">${esc((TYPES[cat.type] || TYPES.podcast).label)}</div></div>
-      <button class="icon-btn" data-act="editcat" aria-label="Modifier la catégorie">${IC.edit}</button>
-      <button class="btn primary" data-act="gohere" style="--accent:${cat.color};color:#06120d">${IC.play}GO ici</button></div>
-    ${list.length ? list.map(docCard).join('') : `<div class="card empty">Aucun document dans cette catégorie. Appuyez sur « GO ici » pour en créer un.</div>`}
-    ${disk.length ? `<div class="sec-h"><p class="h">Sur le disque (${esc(rootName)} / ${esc(cat.folder)})</p></div><div class="card"><div class="list" style="max-height:none;margin:0">${disk.map(d => `<div class="row">${IC.doc}<div class="grow"><div class="t">${esc(d.folder)}</div><div class="m">${d.parts.length} partie(s)</div></div>
-        <button class="btn sm" data-act="dindex" data-f="${esc(d.folder)}">${IC.list}Sommaire</button><button class="btn sm primary" data-act="dcont" data-f="${esc(d.folder)}">${IC.play}Continuer</button></div>`).join('')}</div></div>` : ''}`;
+let recSearch = '';
+function renderRecs() {
+  const f = view.id ? catById(view.id) : null;
+  $('#topTitle').innerHTML = f ? `<span class="dot" style="--c:${f.color}"></span><span>${esc(f.name)}</span>` : '<span>Enregistrements</span>';
+  const head = f
+    ? `<div class="cat-head"><span class="dot" style="--c:${f.color}"></span><div class="grow"><h1>${esc(f.name)}</h1><div class="small muted">${esc((TYPES[f.type] || TYPES.podcast).label)} · ${docsOf(f.id).length} document(s)</div></div>
+        <button class="icon-btn" data-act="editcat" aria-label="Modifier la catégorie">${IC.edit}</button>
+        <button class="btn primary" data-act="gohere" style="--accent:${f.color};color:#06120d">${IC.play}GO ici</button></div>`
+    : `<div class="cat-head"><div class="grow"><h1>Enregistrements</h1><div class="small muted">${docs.length} document(s) dans ${cats.length} catégories</div></div></div>`;
+  const chips = `<div class="cats"><a class="cat ${!f ? 'on' : ''}" style="--c:var(--accent)" href="#/enregistrements">Tous <span class="n">${docs.length}</span></a>${cats.map(c => { const n = docsOf(c.id).length;
+    return `<a class="cat ${f && f.id === c.id ? 'on' : ''}" style="--c:${c.color}" href="#/enregistrements/${encodeURIComponent(c.id)}"><span class="dot"></span>${esc(c.name)}${n ? ` <span class="n">${n}</span>` : ''}</a>`; }).join('')}</div>`;
+  $('#catView').innerHTML = head + chips + `<input class="search" id="recSearch" type="search" placeholder="Rechercher un titre, une source, un sujet…" value="${esc(recSearch)}" autocomplete="off"><div id="recList"></div>`;
+  renderRecList();
+}
+const dayLabel = t => { const d = new Date(t), today = new Date(); const k = x => x.toDateString(); const y = new Date(today); y.setDate(today.getDate() - 1);
+  return k(d) === k(today) ? "Aujourd'hui" : k(d) === k(y) ? 'Hier' : cap(fmtLong(t)); };
+function renderRecList() {
+  const f = view.id ? catById(view.id) : null, q = norm(recSearch);
+  let list = (f ? docsOf(f.id) : docs.slice()).sort((a, b) => (b.updated || b.created) - (a.updated || a.created));
+  if (q) list = list.filter(d => norm([docLabel(d), d.source || '', ...d.parts.map(p => p.title || p.label || '')].join(' ')).includes(q));
+  let h = '', lastDay = '';
+  for (const d of list) { const lbl = dayLabel(d.updated || d.created); if (lbl !== lastDay) { h += `<p class="h day">${esc(lbl)}</p>`; lastDay = lbl; } h += docCard(d); }
+  if (!list.length) h = `<div class="card empty">${q ? 'Aucun résultat.' : f ? 'Aucun document dans cette catégorie. Appuyez sur « GO ici » pour en créer un.' : 'Aucun enregistrement pour l’instant. Lancez une écoute depuis l’accueil.'}</div>`;
+  const disk = f ? diskOnly(f.id) : [];
+  if (disk.length) h += `<div class="sec-h"><p class="h">Sur le disque (${esc(rootName)} / ${esc(f.folder)})</p></div><div class="card"><div class="list" style="max-height:none;margin:0">${disk.map(d => `<div class="row">${IC.doc}<div class="grow"><div class="t">${esc(d.folder)}</div><div class="m">${d.parts.length} partie(s)</div></div>
+        <button class="btn sm" data-act="dindex" data-f="${esc(d.folder)}">${IC.list}Sommaire</button><button class="btn sm primary" data-act="dcont" data-f="${esc(d.folder)}">${IC.play}Continuer</button></div>`).join('')}</div></div>`;
+  $('#recList').innerHTML = h;
 }
 
 function renderLive() {
   if (!live) return;
+  if (view.name !== 'direct') { renderMini(); renderTabs(); return; }
   const doc = live.doc, part = curPart(), segs = realSegs(part.segments), cat = catById(doc.cat);
   $('#nowKicker').innerHTML = `<span class="num">${partNo(doc, doc.parts.length - 1)}</span><span>${esc(docLabel(doc))}</span><span>·</span><span>${segs.length ? 'partie en cours depuis ' + fmtT(segs[0].t) : 'en attente de parole'}</span>`;
   $('#nowTitle').textContent = part.label || liveTitle(segs) || (segs.length ? trunc(segs[0].text, 60) : "À l'écoute…");
@@ -1633,7 +1740,8 @@ function draw() {
 requestAnimationFrame(draw);
 setInterval(() => {
   if (!live) return;
-  $('#liveClock').textContent = fmtClock(Date.now() - live.start);
+  const clk = fmtClock(Date.now() - live.start);
+  $('#liveClock').textContent = clk; $('#miniClock').textContent = clk; $('#tabDirectLbl').textContent = clk;
   if (document.hidden) return;
   const map = {voice:['Voix','voice'], noise:['Bruit ignoré','noise'], silence:['Silence',''], off:['Inactif','']};
   const [txt, cls] = map[analyser ? curLabel : 'off'], b = $('#vadBadge'); b.textContent = txt; b.className = 'vad ' + cls;
@@ -1700,7 +1808,15 @@ $('#btnNewTopic').addEventListener('click', () => {
   startNewPart(Date.now(), 'manual'); saveSoon();
 });
 $('#btnPeek').addEventListener('click', () => live && openPart(live.doc, live.doc.parts.length - 1));
-document.addEventListener('click', e => { if (e.target.closest('[data-act=settings]')) { closeNav(); $('#dlgSettings').showModal(); } });
+document.addEventListener('click', e => {
+  if (e.target.closest('[data-act=settings]')) { closeNav(); $('#dlgSettings').showModal(); }
+  if (e.target.closest('[data-act=startdirect]')) go();
+});
+$('#miniStop').addEventListener('click', e => { e.stopPropagation(); stopLive(); });
+$('#miniLive').addEventListener('click', () => { location.hash = '#/direct'; });
+$('#livePill').addEventListener('click', () => { if (live) location.hash = '#/direct'; });
+$('#liveOff').addEventListener('click', onDocAction);
+$('#catView').addEventListener('input', e => { if (e.target.id === 'recSearch') { recSearch = e.target.value; renderRecList(); } });
 $('#docPane').addEventListener('input', e => { if (e.target.id === 'srcInput') { S.nextSource = e.target.value; saveSettings(); } });
 $('#btnSettings').addEventListener('click', () => $('#dlgSettings').showModal());
 $('#btnSettings2').addEventListener('click', () => { closeNav(); $('#dlgSettings').showModal(); });
