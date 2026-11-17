@@ -190,6 +190,31 @@ body.is-live #toasts{bottom:calc(108px + env(safe-area-inset-bottom))}
 .toast{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:12px;padding:10px 14px;box-shadow:0 10px 30px rgba(0,0,0,.28);font-size:14px;animation:tin .2s ease-out}
 .toast.warn{border-left-color:var(--warn)}.toast.err{border-left-color:var(--danger)}
 @keyframes tin{from{opacity:0;transform:translateY(6px)}}
+.notes{display:flex;flex-direction:column;max-height:46vh;overflow:auto;overscroll-behavior:contain}
+.note{display:flex;gap:10px;padding:7px 0;border-bottom:1px dashed var(--line)}
+.note:last-child{border-bottom:0}
+.note time{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;padding-top:2px;flex:none}
+.note p{margin:0}
+.note.q p{font-style:italic;border-left:3px solid var(--accent);padding-left:10px}
+.note.r p{color:var(--muted)}
+.tag{font-size:11px;font-style:normal;padding:1px 6px;border-radius:6px;border:1px solid var(--line);color:var(--warn);margin-right:4px}
+.nstatus{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:7px;margin:2px 0 10px;min-height:18px}
+.spin{width:12px;height:12px;border-radius:50%;border:2px solid var(--line);border-top-color:var(--accent);animation:spin .8s linear infinite;flex:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.lines.raw{max-height:22vh;font-size:14px;color:var(--muted);margin-top:0}
+.keywarn{display:flex;align-items:center;gap:10px;font-size:13px;padding:10px 12px;border-radius:12px;background:color-mix(in srgb,var(--warn) 12%,var(--panel));border:1px solid color-mix(in srgb,var(--warn) 40%,var(--line));margin-bottom:12px}
+.keywarn svg{color:var(--warn)}
+.chapo{font-size:16px;font-weight:550;margin:0 0 4px;line-height:1.45}
+.para{margin:0 0 10px}
+.sum blockquote{margin:6px 0;padding:6px 12px;border-left:3px solid var(--accent);background:var(--panel2);border-radius:0 8px 8px 0;font-style:italic}
+.tblw{overflow-x:auto}
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th,.tbl td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+.tbl th{color:var(--muted);font-weight:600}
+.blk{margin-top:16px}
+.blk>summary{cursor:pointer;font-size:13px;color:var(--muted)}
+.blk .notes{max-height:none}
+.cat-head h1{line-height:1.15}
 .banner{font-size:13px;padding:10px 12px;border-radius:12px;background:color-mix(in srgb,var(--warn) 12%,var(--panel));border:1px solid color-mix(in srgb,var(--warn) 40%,var(--line));margin-bottom:14px}
 </style>
 </head>
@@ -251,10 +276,15 @@ body.is-live #toasts{bottom:calc(108px + env(safe-area-inset-bottom))}
       <div class="kicker" id="nowKicker"></div>
       <button class="btn primary" id="btnResume" hidden style="margin-top:12px;width:100%">Reprendre l'écoute</button>
       <h2 id="nowTitle">À l'écoute…</h2>
-      <div class="lines" id="lines"></div>
-      <div class="interim" id="interim"></div>
+      <div class="nstatus" id="noteStatus"></div>
+      <div class="notes" id="notesBox"></div>
     </div>
     <div class="card">
+      <p class="h">En direct</p>
+      <div class="lines raw" id="lines"></div>
+      <div class="interim" id="interim"></div>
+    </div>
+    <div class="card" id="meterCard">
       <div class="meter"><span class="vad" id="vadBadge">—</span><canvas id="meter"></canvas></div>
       <div class="vadstats" id="vadStats"></div>
     </div>
@@ -268,7 +298,7 @@ body.is-live #toasts{bottom:calc(108px + env(safe-area-inset-bottom))}
 <div class="actionbar" id="actionbar" hidden><div class="in">
   <button class="btn" id="btnNewTopic"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Nouvelle partie</button>
   <button class="stop" id="btnStop" aria-label="Arrêter"><svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg></button>
-  <button class="btn" id="btnPeek"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Résumé</button>
+  <button class="btn" id="btnPeek"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Aperçu</button>
 </div></div>
 
 <dialog id="dlgTopic">
@@ -287,6 +317,9 @@ body.is-live #toasts{bottom:calc(108px + env(safe-area-inset-bottom))}
   <div class="dlg-h"><h3 id="dcTitle">Nouvelle catégorie</h3><button class="icon-btn" data-close aria-label="Fermer"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
   <form class="dlg-b" id="catForm" method="dialog">
     <label class="field">Nom<input type="text" id="catName" maxlength="40" placeholder="ex. Réunions, Cours de droit, Podcasts…" required></label>
+    <label class="field">Type de contenu
+      <select id="catType"><option value="podcast">Podcast / vidéo</option><option value="reunion">Réunion / appel</option><option value="cours">Cours / conférence</option><option value="idees">Idées / notes perso</option></select>
+      <span class="hint">Choisit le modèle de prise de notes et de compte rendu.</span></label>
     <div class="field">Couleur<div class="swatches" id="catColors"></div></div>
     <p class="hint" id="catHint"></p>
   </form>
@@ -318,8 +351,8 @@ body.is-live #toasts{bottom:calc(108px + env(safe-area-inset-bottom))}
           <option value="high">Forte : découpe plus souvent</option>
         </select></label>
       <label class="field">Nouvelle partie après un silence de (minutes, 0 = jamais)<input type="number" min="0" max="60" data-k="gapMin"></label>
-      <label class="field">Taille minimale d'une partie (phrases)<input type="number" min="3" max="30" data-k="minTopicSegs"></label>
-      <span class="hint">« Passons à », « point suivant », « autre sujet »… déclenchent aussi une nouvelle partie.</span>
+      <label class="field">Taille minimale d'une partie, sans clé API (phrases)<input type="number" min="3" max="30" data-k="minTopicSegs"></label>
+      <span class="hint">Avec une clé API, c'est Claude qui repère les changements de sujet. Sans clé, l'app compare le vocabulaire et repère les transitions (« passons à », « point suivant »…).</span>
     </div>
     <div class="set-grp">
       <p class="h">Filtrage voix / bruit</p>
@@ -329,18 +362,17 @@ body.is-live #toasts{bottom:calc(108px + env(safe-area-inset-bottom))}
       <label class="field">Tolérance aux voix lointaines : <span id="distVal"></span><input type="range" min="0.15" max="0.7" step="0.05" data-k="distantRatio"></label>
       <label class="field">Mots minimum par fragment<input type="number" min="1" max="6" data-k="minWords"></label>
       <label class="field row2"><input type="checkbox" data-k="showRejected"> Montrer les fragments filtrés pendant l'écoute</label>
+      <span class="hint">Pour les podcasts et vidéos, le son vient d'un haut-parleur : le filtre des voix lointaines est alors désactivé automatiquement.</span>
     </div>
     <div class="set-grp">
-      <p class="h">Résumés et fichiers</p>
-      <label class="field">Moteur de résumé
-        <select data-k="engine"><option value="local">Local (hors ligne, gratuit)</option><option value="claude">Claude via l'API Anthropic</option></select></label>
-      <label class="field">Clé API Anthropic<input type="password" data-k="apiKey" placeholder="sk-ant-…" autocomplete="off"><span class="hint">Stockée uniquement dans ce navigateur.</span></label>
-      <label class="field">Modèle
-        <select data-k="model">
-          <option value="claude-haiku-5-5">Claude Haiku 5.5 (rapide, économique)</option>
-          <option value="claude-sonnet-5-5">Claude Sonnet 5.5</option>
-          <option value="claude-opus-5-5">Claude Opus 5.5</option>
-        </select></label>
+      <p class="h">Prise de notes (Claude)</p>
+      <label class="field">Clé API Anthropic<input type="password" data-k="apiKey" placeholder="sk-ant-…" autocomplete="off"><span class="hint">Indispensable pour les notes et les comptes rendus. Stockée uniquement dans ce navigateur.</span></label>
+      <label class="field">Modèle des notes en direct
+        <select data-k="modelNotes"><option value="claude-haiku-5-5">Claude Haiku 5.5 (rapide, économique)</option><option value="claude-sonnet-5-5">Claude Sonnet 5.5</option><option value="claude-opus-5-5">Claude Opus 5.5</option></select>
+        <span class="hint">Appelé environ une fois par minute : un modèle rapide suffit.</span></label>
+      <label class="field">Modèle des comptes rendus et de la synthèse
+        <select data-k="modelWrite"><option value="claude-sonnet-5-5">Claude Sonnet 5.5 (recommandé)</option><option value="claude-haiku-5-5">Claude Haiku 5.5</option><option value="claude-opus-5-5">Claude Opus 5.5</option></select></label>
+      <label class="field">Mise au propre des notes toutes les (secondes)<input type="number" min="30" max="180" step="15" data-k="chunkSec"></label>
       <label class="field row2"><input type="checkbox" data-k="includeTranscript"> Inclure la transcription dans chaque partie</label>
     </div>
     <div class="set-grp">
@@ -424,7 +456,7 @@ Object.assign(IC, {
    Racine / Catégorie / 2026-11-13 22h26 / 00 - Sommaire.md, 01 - Sujet.md, 02 - …
    ========================================================= */
 const DEFAULTS = {lang:'fr-FR', threshold:2.5, distant:true, distantRatio:0.4, minWords:2, showRejected:false,
-  engine:'local', apiKey:'', model:'claude-haiku-5-5', wakeLock:true, vad:true,
+  apiKey:'', modelNotes:'claude-haiku-5-5', modelWrite:'claude-sonnet-5-5', chunkSec:60, nextSource:'', wakeLock:true, vad:true,
   topicAuto:true, topicSens:'normal', gapMin:3, minTopicSegs:5, includeTranscript:true,
   curCat:'general', docMode:'new', continueKey:''};
 const S = Object.assign({}, DEFAULTS, store.get('ecoute.settings', {}));
@@ -447,8 +479,8 @@ let root = null, rootName = '', rootOK = false;
 const diskDocs = {};           // catId -> [{folder, parts:[noms], title}]  (documents présents sur le disque)
 
 const SOMMAIRE = '00 - Sommaire.md';
-const newPart = t => ({id: t + Math.random(), start: t, end: 0, status: 'open', segments: [], title: '', summary: null, savedAs: '', sims: []});
-const newDoc = (cat, t) => ({id: t, cat, created: t, title: '', folder: '', diskParts: [], parts: [], runs: [], rejected: [], updated: t});
+const newPart = t => ({id: t + Math.random(), start: t, end: 0, status: 'open', segments: [], title: '', label: '', notes: [], clean: [], quotes: [], refs: [], writeup: null, savedAs: '', sims: []});
+const newDoc = (cat, t) => ({id: t, cat, type: '', source: '', created: t, title: '', folder: '', diskParts: [], parts: [], runs: [], rejected: [], synthesis: null, updated: t});
 const curPart = () => live && live.doc.parts[live.doc.parts.length - 1];
 const partNo = (doc, i) => (doc.diskParts ? doc.diskParts.length : 0) + i + 1;
 const docsOf = catId => docs.filter(d => d.cat === catId);
@@ -622,7 +654,7 @@ function handleFinal(raw, conf) {
   let reason = null, meanRms = 0;
   if (!words) reason = 'tic de langage';
   else if (conf > 0 && conf < 0.3) reason = 'reconnaissance incertaine';
-  if (!reason && vadActive()) {
+  if (!reason && vadActive() && docType(live.doc) !== 'podcast') {
     const st = windowStats(from, now); meanRms = st.meanRms;
     if (st.tot > 8 && st.speechMs < 200) reason = 'aucune voix détectée';
     else if (S.distant && fgLevel > 0 && st.meanRms > 0 && st.meanRms < fgLevel * S.distantRatio) reason = "voix d'arrière-plan";
@@ -698,34 +730,199 @@ function localSummary(segs) {
     questions: pick(isQ), figures: pick(t => /\d/.test(t) || FIGURES.test(t)), keywords};
 }
 
-async function claudeSummary(segs) {
-  if (!S.apiKey) throw new Error('clé API manquante dans les réglages');
-  const transcript = segs.map(s => `[${fmtT(s.t)}] ${s.text}`).join('\n');
-  const prompt = `Voici la transcription brute (reconnaissance vocale, peu de ponctuation, erreurs possibles) d'un passage d'un enregistrement audio, découpé automatiquement autour d'un même sujet. Résume-le fidèlement sans rien inventer. Ignore les fragments incohérents qui ressemblent à du bruit (télévision, conversations de fond). Réponds dans la langue de la transcription, UNIQUEMENT avec un objet JSON valide :
-{"titre":"titre court et précis du sujet (max 8 mots)","resume":"2 à 4 phrases","points_cles":[],"decisions":[],"actions":[],"questions":[],"chiffres_dates":[],"mots_cles":[]}
-Laisse une liste vide quand il n'y a rien.
+/* =========================================================
+   Prise de notes par Claude, en trois étages
+   1. En direct, toutes les ~60 s : l'extrait transcrit est envoyé à Claude, qui rend le texte
+      nettoyé, des notes détaillées, les citations, les références et signale les changements
+      de sujet. Rien n'est résumé à ce stade, pour ne perdre aucun détail.
+   2. À la fin d'une partie : le compte rendu rédigé est écrit à partir de ces notes
+      (et non de la transcription brute), avec une longueur proportionnelle à leur nombre.
+   3. À la fin de l'écoute : une synthèse de tout le document est ajoutée au sommaire.
+   ========================================================= */
+const TYPES = {
+  podcast: {label:'Podcast / vidéo', who:"aux intervenants (animateur, invité…), seulement quand c'est clair",
+    focus:"thèses et idées défendues, arguments et raisonnements, exemples et anecdotes, chiffres et dates, conseils concrets, citations marquantes, références (livres, études, personnes, entreprises, œuvres, outils, liens)",
+    fields:['a_retenir', 'citations', 'references', 'questions']},
+  reunion: {label:'Réunion / appel', who:'aux participants, quand c\'est clair',
+    focus:"informations échangées, décisions prises, actions (qui fait quoi et pour quand), désaccords, chiffres et dates",
+    fields:['a_retenir', 'decisions', 'actions', 'questions']},
+  cours: {label:'Cours / conférence', who:"à l'enseignant ou à l'orateur",
+    focus:"notions et définitions, explications, exemples, formules, dates et noms importants, plan du cours",
+    fields:['a_retenir', 'definitions', 'references', 'questions']},
+  idees: {label:'Idées / notes perso', who:"à l'auteur, qui parle seul",
+    focus:"idées, raisonnements, pistes, questions, décisions et prochaines étapes",
+    fields:['a_retenir', 'actions', 'questions']}
+};
+const docType = doc => TYPES[doc && doc.type] ? doc.type : 'podcast';
+const hasKey = () => !!(S.apiKey && S.apiKey.trim());
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const GRAN = {low:'large : seulement les grands changements de thème', normal:'normale : un changement net de thème', high:'fine : chaque sous-thème distinct'};
+const strList = v => Array.isArray(v) ? v.map(x => typeof x === 'string' ? x.trim() : '').filter(Boolean) : [];
+const objList = (v, key) => Array.isArray(v) ? v.filter(x => x && typeof x === 'object' && x[key]) : [];
 
-Transcription :
-${transcript}`;
+async function callClaude(model, prompt, maxTokens) {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method:'POST',
-    headers:{'content-type':'application/json','x-api-key':S.apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-    body: JSON.stringify({model:S.model, max_tokens:1800, messages:[{role:'user', content:prompt}]})
+    headers:{'content-type':'application/json', 'x-api-key':S.apiKey.trim(), 'anthropic-version':'2023-06-01', 'anthropic-dangerous-direct-browser-access':'true'},
+    body: JSON.stringify({model, max_tokens:maxTokens, messages:[{role:'user', content:prompt}]})
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(res.status === 401 ? 'clé API invalide' : (data.error && data.error.message) || ('erreur API ' + res.status));
+  if (!res.ok) throw new Error(res.status === 401 ? 'clé API invalide' : res.status === 429 ? 'limite de requêtes atteinte' : (data.error && data.error.message) || ('erreur API ' + res.status));
   const txt = (data.content || []).map(c => c.text || '').join('');
-  const j = JSON.parse(txt.slice(txt.indexOf('{'), txt.lastIndexOf('}') + 1));
-  const arr = v => Array.isArray(v) ? v.map(x => typeof x === 'string' ? x : JSON.stringify(x)).filter(Boolean) : [];
-  return {title: j.titre || 'Sujet', overview: j.resume || '', keyPoints: arr(j.points_cles), decisions: arr(j.decisions),
-    actions: arr(j.actions), questions: arr(j.questions), figures: arr(j.chiffres_dates), keywords: arr(j.mots_cles)};
+  const a = txt.indexOf('{'), b = txt.lastIndexOf('}');
+  if (a < 0 || b < a) throw new Error('réponse illisible');
+  return JSON.parse(txt.slice(a, b + 1));
 }
-async function makeSummary(segs) {
-  segs = realSegs(segs);
-  let sm, engine = S.engine;
-  try { sm = engine === 'claude' ? await claudeSummary(segs) : localSummary(segs); }
-  catch (e) { toast('Résumé Claude indisponible (' + e.message + ') : résumé local utilisé.', 'warn', 7000); sm = localSummary(segs); engine = 'local'; }
-  return Object.assign(sm, {at: Date.now(), engine, count: segs.length});
+
+/* ---- Étage 1 : notes en direct ---- */
+const bufWords = () => live ? live.buf.reduce((a, s) => a + s.text.split(' ').length, 0) : 0;
+function maybeFlush() {
+  if (!live || live.stopping || !hasKey() || live.busy || !live.buf.length) return;
+  const age = Date.now() - live.buf[0].t, w = bufWords(), period = (S.chunkSec || 60) * 1000;
+  if ((age >= period && w >= 20) || w >= 320 || (age >= period * 2.5 && w >= 3)) processChunk(live.doc, live.buf.splice(0));
+}
+setInterval(maybeFlush, 3000);
+
+let notesQ = Promise.resolve();
+// target : partie imposée (fin de partie, arrêt) ; sans target, la partie en cours, qui peut alors être découpée
+function processChunk(doc, segs, target = null) {
+  if (live && live.doc === doc) live.busy = true;
+  notesQ = notesQ.then(() => chunkNotes(doc, segs, target)).catch(e => console.warn(e)).finally(() => {
+    if (live && live.doc === doc) { live.busy = false; live.lastNotes = Date.now(); renderLive(); setTimeout(maybeFlush, 0); }
+  });
+  return notesQ;
+}
+async function chunkNotes(doc, segs, target) {
+  const part = target || doc.parts[doc.parts.length - 1];
+  if (!part || !segs.length) return;
+  const type = TYPES[docType(doc)];
+  const text = segs.map(s => s.text).join(' ');
+  const prevNotes = part.notes.slice(-8).map(n => '- ' + n.text).join('\n');
+  const prevClean = part.clean.length ? part.clean[part.clean.length - 1].text.slice(-240) : '';
+  const prompt = `Tu prends des notes en direct pendant l'écoute d'un contenu de type « ${type.label} »${doc.source ? ` (source : ${doc.source})` : ''}. Voici un nouvel extrait de transcription automatique : peu ou pas de ponctuation, des mots parfois mal reconnus, éventuellement plusieurs voix.
+
+Sujet en cours : ${part.label || "(début de l'écoute, pas encore de sujet)"}
+Dernières notes déjà prises :
+${prevNotes || '(aucune)'}
+Fin du passage précédent : « ${prevClean || '…'} »
+
+Extrait à traiter :
+"""
+${text}
+"""
+
+Consignes :
+1. "texte_propre" : réécris l'extrait fidèlement, avec ponctuation et majuscules ; corrige les mots manifestement mal reconnus d'après le contexte ; retire hésitations et répétitions. Ne résume pas, ne commente pas.
+2. "notes" : notes détaillées, une idée par note, en phrases courtes mais complètes et compréhensibles seules. Garde tout ce qui compte : ${type.focus}. Attribue les propos ${type.who}. Ne répète pas les notes déjà prises. Ignore ce qui ressemble à du bruit (publicité, jingle, conversation parasite, fragment incompréhensible).
+3. "citations" : 0 à 2 phrases marquantes dites presque mot pour mot, avec leur auteur si c'est clair.
+4. "references" : livres, études, personnes, entreprises, œuvres, outils ou liens mentionnés, avec leur type.
+5. Changement de sujet (granularité ${GRAN[S.topicSens] || GRAN.normal}) : si l'extrait passe à un sujet clairement différent du sujet en cours, découpe-le en plusieurs segments dans l'ordre et mets "nouveau_sujet": true sur le segment qui ouvre le nouveau sujet. Un exemple, une précision ou une courte digression ne sont pas un nouveau sujet. Au début de l'écoute, "nouveau_sujet" vaut false.
+Écris dans la langue de l'extrait. Réponds UNIQUEMENT avec un objet JSON valide :
+{"segments":[{"nouveau_sujet":false,"sujet":"intitulé court du sujet (6 mots max)","texte_propre":"…","notes":["…"],"citations":[{"texte":"…","auteur":"…"}],"references":[{"nom":"…","type":"…"}]}]}`;
+  let r = null, err = null;
+  for (let k = 0; k < 2 && !r; k++) {
+    try { r = await callClaude(S.modelNotes, prompt, 3000); }
+    catch (e) { err = e; if (/invalide/.test(e.message)) break; await sleep(3000 + k * 4000); }
+  }
+  const t0 = segs[0].t, t1 = segs[segs.length - 1].t;
+  if (!r) {          // échec : le texte brut est gardé, rien n'est perdu
+    part.clean.push({t: t0, text, raw: true});
+    part.noteErrors = (part.noteErrors || 0) + 1;
+    if (live && live.doc === doc) live.lastError = err ? err.message : 'erreur';
+    toast('Notes non mises au propre (' + (err ? err.message : 'erreur') + ') : le texte brut est conservé.', 'warn', 6000);
+    saveSoon(); renderAll(); return;
+  }
+  if (live && live.doc === doc) live.lastError = '';
+  const sg = (Array.isArray(r.segments) && r.segments.length ? r.segments : [r]).filter(x => x && typeof x === 'object');
+  const total = sg.reduce((a, x) => a + String(x.texte_propre || '').length, 0) || 1;
+  let acc = 0, cur = part;
+  sg.forEach(x => {
+    const t = Math.round(t0 + (t1 - t0) * acc / total); acc += String(x.texte_propre || '').length;
+    if (x.nouveau_sujet === true && !target && S.topicAuto && cur.status === 'open' && cur.notes.length >= 3 && cur === doc.parts[doc.parts.length - 1])
+      cur = splitPart(doc, cur, Math.max(t, cur.start + 1), x.sujet);
+    if (x.sujet && (!cur.label || cur.notes.length < 3)) cur.label = String(x.sujet).trim();
+    if (x.texte_propre) cur.clean.push({t, text: String(x.texte_propre).trim()});
+    strList(x.notes).forEach(n => cur.notes.push({t, text: n}));
+    objList(x.citations, 'texte').forEach(c => cur.quotes.push({t, texte: String(c.texte).trim(), auteur: String(c.auteur || '').trim()}));
+    objList(x.references, 'nom').forEach(f => { if (!cur.refs.some(z => norm(z.nom) === norm(f.nom))) cur.refs.push({nom: String(f.nom).trim(), type: String(f.type || '').trim(), contexte: String(f.contexte || '').trim()}); });
+  });
+  doc.updated = Date.now(); saveSoon(); renderAll();
+}
+function splitPart(doc, part, t, label) {
+  const np = newPart(t); np.label = label ? String(label).trim() : '';
+  const idx = part.segments.findIndex(s => s.t >= t);
+  if (idx > 0) np.segments = part.segments.splice(idx);
+  doc.parts.push(np);
+  closePart(part, doc);
+  if (live && live.doc === doc) toast(`Nouveau sujet${np.label ? ` : « ${np.label} »` : ''}. La partie précédente est en cours de rédaction.`);
+  return np;
+}
+
+/* ---- Étage 2 : compte rendu rédigé d'une partie ---- */
+const FIELD_SPEC = {
+  a_retenir: '"a_retenir":["3 à 6 points essentiels, une phrase chacun"]',
+  citations: '"citations":[{"texte":"les citations les plus marquantes parmi celles relevées (5 max)","auteur":"…"}]',
+  references: '"references":[{"nom":"…","type":"livre | étude | personne | entreprise | œuvre | outil | lien | autre","contexte":"pourquoi c\'est mentionné"}]',
+  questions: '"questions":["questions ouvertes ou pistes pour aller plus loin"]',
+  decisions: '"decisions":["décisions prises"]',
+  actions: '"actions":[{"qui":"…","quoi":"…","quand":"…"}]',
+  definitions: '"definitions":[{"terme":"…","definition":"…"}]'
+};
+async function writeUp(doc, part) {
+  const type = TYPES[docType(doc)];
+  const material = part.notes.length ? part.notes.map(n => '- ' + n.text).join('\n') : part.clean.map(c => c.text).join('\n');
+  if (!material.trim()) throw new Error('aucune note dans cette partie');
+  const units = part.notes.length || Math.ceil(material.split(/\s+/).length / 35);
+  const target = clamp(units * 30, 120, 1500);
+  const quotes = part.quotes.map(q => `- « ${q.texte} »${q.auteur ? ' — ' + q.auteur : ''}`).join('\n');
+  const refs = part.refs.map(f => `- ${f.nom}${f.type ? ' (' + f.type + ')' : ''}${f.contexte ? ' : ' + f.contexte : ''}`).join('\n');
+  const prompt = `Tu es un excellent rédacteur de comptes rendus. Voici les notes prises en direct pendant l'écoute d'un passage d'un contenu de type « ${type.label} »${doc.source ? ` (source : ${doc.source})` : ''}${part.label ? `, sur le sujet « ${part.label} »` : ''}.
+
+Rédige le compte rendu de ce passage :
+- en prose fluide, au présent, en paragraphes (un par idée ou étape du raisonnement), sans listes ;
+- en conservant tous les éléments concrets des notes : chiffres, dates, noms, exemples, anecdotes, enchaînement des arguments. Ne résume pas à l'excès : vise environ ${target} mots, davantage si les notes sont denses ;
+- en attribuant les propos ${type.who} ;
+- sans rien inventer ni ajouter d'information absente des notes ; omets ce qui est confus plutôt que de deviner.
+Écris dans la langue des notes. Réponds UNIQUEMENT avec un objet JSON valide :
+{"titre":"titre précis du passage (8 mots max)","chapeau":"1 à 2 phrases qui disent l'essentiel","compte_rendu":["paragraphe 1","paragraphe 2","…"],${type.fields.map(f => FIELD_SPEC[f]).join(',')},"mots_cles":["4 à 8 mots-clés"]}
+Laisse une liste vide quand il n'y a rien.
+
+Notes :
+${material}
+${quotes ? `\nCitations relevées :\n${quotes}\n` : ''}${refs ? `\nRéférences mentionnées :\n${refs}\n` : ''}`;
+  const r = await callClaude(S.modelWrite, prompt, Math.min(8000, 1500 + target * 3));
+  const paras = Array.isArray(r.compte_rendu) ? strList(r.compte_rendu) : String(r.compte_rendu || '').split(/\n\s*\n/).map(x => x.trim()).filter(Boolean);
+  return {titre: String(r.titre || part.label || '').trim(), chapeau: String(r.chapeau || '').trim(), compte_rendu: paras,
+    a_retenir: strList(r.a_retenir), citations: objList(r.citations, 'texte'), references: objList(r.references, 'nom'),
+    questions: strList(r.questions), decisions: strList(r.decisions), actions: objList(r.actions, 'quoi'), definitions: objList(r.definitions, 'terme'),
+    mots_cles: strList(r.mots_cles), model: S.modelWrite, at: Date.now()};
+}
+// Compatibilité avec les parties créées par les versions précédentes
+function writeupOf(p) {
+  if (!p) return null;
+  if (p.writeup) return p.writeup;
+  const sm = p.summary; if (!sm) return null;
+  return {titre: sm.title || p.title, chapeau: '', compte_rendu: sm.overview ? [sm.overview] : [], a_retenir: sm.keyPoints || [], citations: [], references: [],
+    questions: sm.questions || [], decisions: sm.decisions || [], actions: (sm.actions || []).map(a => typeof a === 'string' ? {quoi: a} : a), definitions: [], mots_cles: sm.keywords || []};
+}
+
+/* ---- Étage 3 : synthèse du document ---- */
+async function synthesize(doc) {
+  const parts = doc.parts.filter(p => p.writeup);
+  if (!hasKey() || !parts.length) return;
+  const type = TYPES[docType(doc)];
+  const body = parts.map(p => `Partie ${partNo(doc, doc.parts.indexOf(p))} — ${p.writeup.titre}\n${p.writeup.chapeau}\n${p.writeup.a_retenir.map(x => '- ' + x).join('\n')}`).join('\n\n');
+  const prompt = `Voici le découpage en parties d'un contenu de type « ${type.label} »${doc.source ? ` (source : ${doc.source})` : ''}, avec pour chaque partie son titre, son chapeau et ses points essentiels.
+Écris la synthèse de l'ensemble : ce dont il est question, le fil conducteur et les idées les plus importantes. N'invente rien. Écris dans la langue des parties.
+Réponds UNIQUEMENT avec un objet JSON valide :
+{"titre":"titre du document (10 mots max)","synthese":["1 à 3 paragraphes"],"a_retenir":["5 à 8 points essentiels de l'ensemble"]}
+
+${body}`;
+  try {
+    const r = await callClaude(S.modelWrite, prompt, 2500);
+    doc.synthesis = {titre: String(r.titre || '').trim(), synthese: Array.isArray(r.synthese) ? strList(r.synthese) : [String(r.synthese || '')].filter(Boolean), a_retenir: strList(r.a_retenir), at: Date.now()};
+    if (doc.synthesis.titre) doc.title = doc.synthesis.titre;
+  } catch (e) { toast('Synthèse du document non rédigée : ' + e.message, 'warn', 6000); }
 }
 
 /* =========================================================
@@ -783,57 +980,87 @@ function detectShift(topic) {
 function addSegment(seg) {
   let part = curPart();
   const prev = part.segments[part.segments.length - 1];
-  if (S.gapMin > 0 && prev && seg.t - prev.t > S.gapMin * 60000 && part.segments.length >= 2) part = startNewPart(seg.t, 'silence');
+  if (S.gapMin > 0 && prev && seg.t - prev.t > S.gapMin * 60000 && (part.segments.length >= 2 || part.notes.length)) part = startNewPart(seg.t, 'silence');
   part.segments.push(seg);
-  if (S.topicAuto) {
+  if (hasKey()) { live.buf.push(seg); maybeFlush(); }
+  else if (S.topicAuto) {          // sans clé : découpage local par cohésion lexicale
     const at = detectShift(part);
-    if (at > 0) {
-      const moved = part.segments.splice(at);
-      const np = startNewPart(moved[0].t, CUES.test(moved[0].text) ? 'transition' : 'auto', part);
-      np.segments = moved;
-    }
+    if (at > 0) { const moved = part.segments.splice(at); const np = startNewPart(moved[0].t, CUES.test(moved[0].text) ? 'transition' : 'auto'); np.segments = moved; }
   }
   live.doc.updated = Date.now();
   renderLive(); saveSoon();
 }
-function startNewPart(t, why, from = curPart()) {
-  const doc = live.doc, np = newPart(t);
-  doc.parts.push(np);
-  if (from && realSegs(from.segments).length) {
-    closePart(from, doc);
+const partHasContent = p => !!p && (realSegs(p.segments).length > 0 || p.notes.length > 0 || p.clean.length > 0);
+// Nouvelle partie (bouton, long silence, découpage local) : le texte en attente revient à la partie qui se termine
+function startNewPart(t, why) {
+  const doc = live.doc, old = curPart();
+  if (hasKey() && live.buf.length) processChunk(doc, live.buf.splice(0), old);
+  const after = notesQ;
+  const np = newPart(t); doc.parts.push(np);
+  if (partHasContent(old)) {
+    closePart(old, doc, after);
     const label = {auto:'Changement de sujet détecté', transition:'Transition détectée', silence:'Long silence', manual:'Nouvelle partie'}[why];
-    toast(`${label} : partie ${partNo(doc, doc.parts.length - 1)} commencée. La précédente est en cours de résumé.`);
-  } else if (from) doc.parts.splice(doc.parts.indexOf(from), 1);
+    toast(`${label} : partie ${partNo(doc, doc.parts.length - 1)} commencée.`);
+  } else doc.parts.splice(doc.parts.indexOf(old), 1);
   renderLive();
   return np;
 }
 
 /* =========================================================
-   Clôture d'une partie : résumé + fichiers (partie, voisine, sommaire)
+   Clôture d'une partie : compte rendu + fichiers (partie, voisine, sommaire)
    ========================================================= */
 const pendingCloses = new Set();
-function closePart(part, doc) {
-  const p = closePartInner(part, doc);
+function closePart(part, doc, after = null) {
+  const p = closePartInner(part, doc, after);
   pendingCloses.add(p); p.finally(() => pendingCloses.delete(p));
   return p;
 }
-async function closePartInner(part, doc) {
+async function closePartInner(part, doc, after) {
   if (part.status !== 'open') return;
-  const segs = realSegs(part.segments);
-  part.status = 'summarizing';
-  part.end = segs.length ? segs[segs.length - 1].t : Date.now();
-  part.title = liveTitle(segs) || part.title;
-  renderAll();
-  part.summary = await makeSummary(segs);
-  part.title = part.summary.title;
+  part.status = 'summarizing'; renderAll();
+  if (after) await after.catch(() => {});
+  finishPart(part);
+  if (hasKey()) {
+    try { part.writeup = await writeUp(doc, part); part.writeupError = ''; }
+    catch (e) { part.writeupError = e.message; toast('Compte rendu non rédigé (' + e.message + ') : les notes sont conservées, vous pourrez le relancer.', 'warn', 8000); }
+  }
+  part.title = (part.writeup && part.writeup.titre) || part.label || part.title || liveTitle(realSegs(part.segments)) || 'Partie';
   await persistPart(part, doc);
   saveSoon(); renderAll();
 }
+function finishPart(part) {
+  const segs = realSegs(part.segments);
+  const last = Math.max(segs.length ? segs[segs.length - 1].t : 0, part.notes.length ? part.notes[part.notes.length - 1].t : 0, part.clean.length ? part.clean[part.clean.length - 1].t : 0);
+  part.end = last || part.end || part.start;
+  if (!part.clean.length && segs.length) part.clean = segs.map(s => ({t: s.t, text: s.text, raw: true}));
+}
+// Relance la rédaction (après une erreur, l'ajout d'une clé ou un changement de modèle)
+async function rewritePart(doc, part) {
+  if (!hasKey()) { toast('Ajoutez votre clé API Anthropic dans les réglages.', 'warn'); return; }
+  finishPart(part);
+  const prevStatus = part.status;
+  part.status = 'summarizing'; renderAll();
+  try { part.writeup = await writeUp(doc, part); part.writeupError = ''; part.title = part.writeup.titre || part.title; }
+  catch (e) { part.writeupError = e.message; toast('Rédaction impossible : ' + e.message, 'err', 7000); part.status = prevStatus; renderAll(); return; }
+  await persistPart(part, doc);
+  if (doc.parts.filter(p => p.writeup).length > 1 || doc.synthesis) { await synthesize(doc); await writeDocFiles(doc); }
+  saveSoon(); renderAll();
+}
 
-function summaryBlocksMD(sm, h) {
-  const L = (t, a) => a && a.length ? `\n${h} ${t}\n\n${a.map(x => '- ' + x).join('\n')}\n` : '';
-  return (sm.overview ? `\n${h} Résumé\n\n${sm.overview}\n` : '') + L('Points clés', sm.keyPoints) + L('Décisions', sm.decisions) +
-    L('Actions / à faire', sm.actions) + L('Questions', sm.questions) + L('Chiffres & dates', sm.figures);
+const cell = s => String(s || '').replace(/\|/g, '/').replace(/\n/g, ' ');
+function writeupMD(w, part, h) {
+  let md = '';
+  if (w.compte_rendu.length) md += `\n${h} Compte rendu\n\n${w.compte_rendu.join('\n\n')}\n`;
+  if (w.a_retenir.length) md += `\n${h} À retenir\n\n${w.a_retenir.map(x => '- ' + x).join('\n')}\n`;
+  if (w.decisions.length) md += `\n${h} Décisions\n\n${w.decisions.map(x => '- ' + x).join('\n')}\n`;
+  if (w.actions.length) md += `\n${h} Actions\n\n| Qui | Quoi | Quand |\n|---|---|---|\n${w.actions.map(a => `| ${cell(a.qui) || '—'} | ${cell(a.quoi)} | ${cell(a.quand) || '—'} |`).join('\n')}\n`;
+  if (w.definitions.length) md += `\n${h} Définitions\n\n${w.definitions.map(d => `- **${d.terme}** : ${d.definition}`).join('\n')}\n`;
+  const quotes = w.citations.length ? w.citations : (part.quotes || []);
+  if (quotes.length) md += `\n${h} Citations\n\n${quotes.map(q => `> « ${q.texte} »${q.auteur ? ` — ${q.auteur}` : ''}`).join('\n\n')}\n`;
+  const refs = w.references.length ? w.references : (part.refs || []);
+  if (refs.length) md += `\n${h} Références citées\n\n| Référence | Type | Contexte |\n|---|---|---|\n${refs.map(f => `| ${cell(f.nom)} | ${cell(f.type) || '—'} | ${cell(f.contexte) || '—'} |`).join('\n')}\n`;
+  if (w.questions.length) md += `\n${h} Questions et pistes\n\n${w.questions.map(x => '- ' + x).join('\n')}\n`;
+  return md;
 }
 function navLine(doc, i) {
   const items = [];
@@ -845,32 +1072,62 @@ function navLine(doc, i) {
   return items.join(' · ');
 }
 function partMD(doc, i) {
-  const part = doc.parts[i], segs = realSegs(part.segments), sm = part.summary || localSummary(segs), cat = catById(doc.cat), n = partNo(doc, i);
-  const end = part.end || (segs.length ? segs[segs.length - 1].t : part.start);
-  const fm = ['---', `document: ${JSON.stringify(docLabel(doc))}`, `categorie: ${JSON.stringify(cat.name)}`, `partie: ${n}`, `titre: ${JSON.stringify(sm.title)}`,
-    `date: ${isoDate(part.start)}`, `debut: "${fmtT(part.start)}"`, `fin: "${fmtT(end)}"`,
-    `mots_cles: [${(sm.keywords || []).map(k => JSON.stringify(k)).join(', ')}]`, `moteur: ${sm.engine || 'local'}`, '---', ''].join('\n');
-  return fm + `\n# ${n}. ${sm.title}\n\n_${cat.name} › ${docLabel(doc)} · partie ${n} · ${fmtT(part.start)} → ${fmtT(end)} · ${segs.length} interventions_\n\n${navLine(doc, i)}\n` +
-    summaryBlocksMD(sm, '##') + ((sm.keywords || []).length ? `\n**Mots-clés :** ${sm.keywords.join(', ')}\n` : '') +
-    (S.includeTranscript ? `\n## Transcription\n\n${segs.map(s => `**${fmtT(s.t)}** ${s.text}`).join('\n\n')}\n` : '') +
-    `\n---\n\n${navLine(doc, i)}\n`;
+  const part = doc.parts[i], w = writeupOf(part), cat = catById(doc.cat), n = partNo(doc, i), type = TYPES[docType(doc)];
+  const end = part.end || part.start, title = (w && w.titre) || part.title || part.label || 'Partie ' + n, kw = w ? w.mots_cles : [];
+  const fm = ['---', `document: ${JSON.stringify(docLabel(doc))}`, `categorie: ${JSON.stringify(cat.name)}`, `type: ${JSON.stringify(type.label)}`,
+    ...(doc.source ? [`source: ${JSON.stringify(doc.source)}`] : []), `partie: ${n}`, `titre: ${JSON.stringify(title)}`,
+    `date: ${isoDate(part.start)}`, `debut: "${fmtT(part.start)}"`, `fin: "${fmtT(end)}"`, `mots_cles: [${kw.map(k => JSON.stringify(k)).join(', ')}]`, '---', ''].join('\n');
+  let md = fm + `\n# ${n}. ${title}\n\n`;
+  if (w && w.chapeau) md += `> ${w.chapeau}\n\n`;
+  md += `_${cat.name} › ${docLabel(doc)}${doc.source ? ' · ' + doc.source : ''} · partie ${n} · ${fmtT(part.start)} → ${fmtT(end)}_\n\n${navLine(doc, i)}\n`;
+  if (w) md += writeupMD(w, part, '##');
+  else md += `\n_Compte rendu pas encore rédigé${part.writeupError ? ` (${part.writeupError})` : ''}. Ajoutez une clé API Anthropic dans les réglages, puis touchez « Rédiger » sur cette partie._\n`;
+  if (kw.length) md += `\n**Mots-clés :** ${kw.join(', ')}\n`;
+  if (part.notes.length) md += `\n<details>\n<summary>Notes prises pendant l'écoute (${part.notes.length})</summary>\n\n${part.notes.map(x => `- **${fmtT(x.t)}** ${x.text}`).join('\n')}\n\n</details>\n`;
+  const tr = part.clean.length ? part.clean : realSegs(part.segments).map(s => ({t: s.t, text: s.text, raw: true}));
+  if (tr.length && (S.includeTranscript || !w)) {
+    const body = tr.map(c => `**${fmtT(c.t)}** ${c.text}`).join('\n\n'), label = tr.some(c => c.raw) ? 'Transcription' : 'Transcription (nettoyée)';
+    md += w ? `\n<details>\n<summary>${label}</summary>\n\n${body}\n\n</details>\n` : `\n## ${label}\n\n${body}\n`;
+  }
+  return md + `\n---\n\n${navLine(doc, i)}\n`;
 }
 function indexMD(doc) {
-  const cat = catById(doc.cat), done = doc.parts.filter(p => p.status !== 'open' && p.title);
+  const cat = catById(doc.cat), type = TYPES[docType(doc)], done = doc.parts.filter(p => p.status !== 'open' && p.title);
   const total = (doc.diskParts ? doc.diskParts.length : 0) + done.length;
-  const first = doc.created, lastP = done[done.length - 1], last = lastP ? lastP.end : first;
-  const kw = [...new Set(done.flatMap(p => (p.summary && p.summary.keywords || []).slice(0, 3)))].slice(0, 12);
-  let md = ['---', `document: ${JSON.stringify(docLabel(doc))}`, `categorie: ${JSON.stringify(cat.name)}`, `cree: ${isoDate(first)}`, `parties: ${total}`, '---', ''].join('\n');
-  md += `\n# ${docLabel(doc)}\n\n_${cat.name} · ${cap(fmtLong(first))} · ${total} partie${total > 1 ? 's' : ''} · ${fmtT(first)} → ${fmtT(last)}_\n\n`;
-  md += `Ce document est découpé en parties, une par sujet abordé. Ce sommaire les relie sans jamais les rassembler en un seul gros fichier.\n\n## Parties\n\n`;
+  const first = doc.created, lastP = done[done.length - 1], last = lastP ? lastP.end : first, syn = doc.synthesis;
+  let md = ['---', `document: ${JSON.stringify(docLabel(doc))}`, `categorie: ${JSON.stringify(cat.name)}`, `type: ${JSON.stringify(type.label)}`,
+    ...(doc.source ? [`source: ${JSON.stringify(doc.source)}`] : []), `cree: ${isoDate(first)}`, `parties: ${total}`, '---', ''].join('\n');
+  md += `\n# ${docLabel(doc)}\n\n_${cat.name} · ${type.label}${doc.source ? ' · ' + doc.source : ''} · ${cap(fmtLong(first))} · ${total} partie${total > 1 ? 's' : ''} · ${fmtT(first)} → ${fmtT(last)}_\n`;
+  if (syn && syn.synthese.length) md += `\n## Synthèse\n\n${syn.synthese.join('\n\n')}\n`;
+  if (syn && syn.a_retenir.length) md += `\n## À retenir\n\n${syn.a_retenir.map(x => '- ' + x).join('\n')}\n`;
+  md += `\n## Parties\n\nUne partie par sujet abordé. Ce sommaire les relie sans jamais les rassembler en un seul gros fichier.\n\n`;
   (doc.diskParts || []).forEach((f, i) => { md += `${i + 1}. ${doc.diskEntries ? doc.diskEntries[i].replace(/\n\s*/g, '  \n   ') : mdLink(f.replace(/^\d+\s-\s/, '').replace(/\.md$/, ''), f)}\n`; });
   doc.parts.forEach((p, i) => {
     if (p.status === 'open' || !p.title) return;
-    const one = p.summary && p.summary.overview ? trunc(p.summary.overview.replace(/^\d+ interventions sur environ \d+ min\. /, ''), 170) : '';
+    const w = writeupOf(p), one = w && w.chapeau ? w.chapeau : w && w.compte_rendu[0] ? trunc(w.compte_rendu[0], 170) : '';
     md += `${partNo(doc, i)}. ${mdLink(p.title, p.savedAs || partFile(doc, i))} — ${fmtT(p.start)} → ${fmtT(p.end)}${one ? `  \n   ${one}` : ''}\n`;
   });
+  const refs = [];
+  doc.parts.forEach((p, i) => { const w = writeupOf(p); (w && w.references.length ? w.references : p.refs || []).forEach(f => { if (!refs.some(z => norm(z.nom) === norm(f.nom))) refs.push({...f, partie: partNo(doc, i)}); }); });
+  if (refs.length) md += `\n## Références citées\n\n| Référence | Type | Partie |\n|---|---|---|\n${refs.map(f => `| ${cell(f.nom)} | ${cell(f.type) || '—'} | ${f.partie} |`).join('\n')}\n`;
+  const kw = [...new Set(doc.parts.flatMap(p => { const w = writeupOf(p); return (w ? w.mots_cles : []).slice(0, 3); }))].slice(0, 12);
   if (kw.length) md += `\n## Mots-clés\n\n${kw.join(', ')}\n`;
   return md;
+}
+// Réécrit toutes les parties déjà enregistrées (après la synthèse : titre du document à jour partout) puis le sommaire
+function writeDocFiles(doc) {
+  writeQ = writeQ.then(async () => {
+    try {
+      const dir = await docDir(doc); if (!dir) return;
+      for (let i = 0; i < doc.parts.length; i++) { const p = doc.parts[i]; if (p.status === 'saved' && p.savedAs) await writeFile(dir, p.savedAs, partMD(doc, i)); }
+      await writeFile(dir, SOMMAIRE, indexMD(doc));
+    } catch (e) { console.warn(e); }
+  });
+  return writeQ;
+}
+function writeIndex(doc) {
+  writeQ = writeQ.then(async () => { try { const dir = await docDir(doc); if (dir) await writeFile(dir, SOMMAIRE, indexMD(doc)); } catch (e) { console.warn(e); } });
+  return writeQ;
 }
 
 async function hasPerm(h, ask = false) {
@@ -906,7 +1163,7 @@ function persistPart(part, doc) {
       if (!dir) { part.status = 'ready'; }
       else {
         const i = doc.parts.indexOf(part);
-        const name = partFile(doc, i);
+        const name = part.savedAs || partFile(doc, i);
         part.status = 'saved'; part.savedAs = name;
         await writeFile(dir, name, partMD(doc, i));
         const prev = doc.parts[i - 1];   // ajoute le lien « partie suivante » à la précédente
@@ -966,12 +1223,13 @@ async function scanCat(cat) {
 const diskOnly = catId => (diskDocs[catId] || []).filter(d => !docs.some(x => x.cat === catId && x.folder === d.folder));
 const knownOnDisk = doc => (diskDocs[doc.cat] || []).some(d => d.folder === doc.folder);
 
-function saveCategory(id, name, color) {
+function saveCategory(id, name, color, type) {
   name = name.trim(); if (!name) return null;
-  if (id) { const c = catById(id); c.name = name; c.color = color; saveCats(); renderAll(); return c; }
+  if (!TYPES[type]) type = 'podcast';
+  if (id) { const c = catById(id); c.name = name; c.color = color; c.type = type; saveCats(); renderAll(); return c; }
   let folder = safeName(name), i = 2;
   while (cats.some(c => c.folder.toLowerCase() === folder.toLowerCase())) folder = `${safeName(name)} (${i++})`;
-  const c = {id: 'c' + Date.now(), name, folder, color};
+  const c = {id: 'c' + Date.now(), name, folder, color, type};
   cats.push(c); saveCats(); diskDocs[c.id] = [];
   return c;
 }
@@ -996,23 +1254,28 @@ async function go(catId = S.curCat, continueKey = S.docMode === 'continue' ? S.c
       try {   // reprend le titre et les lignes du sommaire existant
         const old = await (await (await d.handle.getFileHandle(SOMMAIRE)).getFile()).text();
         const t = old.match(/^document:\s*"(.*)"\s*$/m); if (t) doc.title = t[1];
+        const s = old.match(/^source:\s*"(.*)"\s*$/m); if (s) doc.source = s[1];
         const block = (old.split(/^## Parties\s*$/m)[1] || '').split(/^## /m)[0];
-        const items = block.split(/^\d+\.\s+/m).map(x => x.trim()).filter(Boolean);
+        const items = block.split(/^\d+\.\s+/m).map(x => x.trim()).filter(Boolean).filter(x => !/^Une partie par sujet/.test(x));
         if (items.length === doc.diskParts.length) doc.diskEntries = items;
       } catch {}
       docs.unshift(doc);
     }
   } else if (continueKey) doc = docs.find(d => String(d.id) === continueKey && d.cat === catId);
-  if (!doc) { doc = newDoc(catId, now); docs.unshift(doc); }
-  else { docs.splice(docs.indexOf(doc), 1); docs.unshift(doc); }
+  if (!doc) {
+    doc = newDoc(catId, now); docs.unshift(doc);
+    doc.source = (S.nextSource || '').trim(); S.nextSource = ''; saveSettings();
+  } else { docs.splice(docs.indexOf(doc), 1); docs.unshift(doc); }
+  if (!TYPES[doc.type]) doc.type = catById(catId).type || 'podcast';
   doc.parts.push(newPart(now)); doc.updated = now;
-  live = {doc, start: now, from: doc.parts.length - 1};
+  live = {doc, start: now, from: doc.parts.length - 1, buf: [], busy: false, lastNotes: 0, stopping: false};
   fgLevel = 0; frames.length = 0; hist.length = 0;
   showView(); saveSoon();
 
   // La reconnaissance démarre tout de suite, pendant le toucher : Safari l'exige.
   wantListen = true; vadRuntimeOff = IOS; recEverStarted = false; pausedTap = false; setPill('');
   startRecognition(); acquireWake();
+  if (!hasKey()) toast("Sans clé API Anthropic, l'app garde seulement la transcription. Ajoutez-la dans les réglages pour la prise de notes.", 'warn', 7000);
   // Sur iPhone/iPad, l'analyse audio n'est pas lancée : Safari ne partage pas le micro avec la reconnaissance vocale.
   if (S.vad && !IOS) {
     try { await startAudio(); }
@@ -1029,24 +1292,36 @@ function askTap() {
   toast("Le navigateur a mis l'écoute en pause : touchez « Reprendre l'écoute ».", 'warn', 7000);
 }
 async function stopLive(silent = false) {
-  if (!live) return;
-  const {doc, start, from} = live;
-  wantListen = false;
-  if (rec) { try { rec.onend = null; rec.stop(); } catch {} rec = null; }
-  recActive = false; stopAudio(); releaseWake(); $('#interim').textContent = '';
-  live = null;
+  if (!live || live.stopping) return;
+  const L = live, {doc, start, from} = L;
+  L.stopping = true; wantListen = false; setPill('warn'); $('#btnStop').disabled = true;
+  // laisse arriver les derniers mots reconnus avant de couper
+  if (rec) {
+    const r = rec;
+    await new Promise(res => { const tm = setTimeout(res, 1500); r.onend = () => { clearTimeout(tm); res(); }; try { r.stop(); } catch { clearTimeout(tm); res(); } });
+    rec = null;
+  }
+  recActive = false; stopAudio(); releaseWake(); $('#interim').textContent = ''; $('#btnStop').disabled = false;
   const p = doc.parts[doc.parts.length - 1];
-  if (p && p.status === 'open') { if (realSegs(p.segments).length) closePart(p, doc); else doc.parts.pop(); }
+  if (hasKey() && L.buf.length) processChunk(doc, L.buf.splice(0), p);
+  const after = notesQ;
+  live = null;
+  if (p && p.status === 'open') { if (partHasContent(p)) closePart(p, doc, after); else doc.parts.pop(); }
   const added = Math.max(0, doc.parts.length - from);
   if (added) doc.runs.push({start, end: Date.now()});
   if (!doc.parts.length) docs.splice(docs.indexOf(doc), 1);
   saveSoon();
-  if (added) location.hash = '#/c/' + encodeURIComponent(doc.cat); else location.hash = '#/';
+  location.hash = added ? '#/c/' + encodeURIComponent(doc.cat) : '#/';
   showView();
   if (!added) { if (!silent) toast('Aucune phrase retenue pendant cette écoute.'); return; }
-  await Promise.allSettled([...pendingCloses]); await writeQ;
-  const saved = doc.parts.slice(from).filter(x => x.status === 'saved').length;
-  toast(saved ? `${added} partie(s) enregistrée(s) dans ${catById(doc.cat).name} / ${doc.folder}.` : `${added} partie(s) prête(s) à télécharger.`);
+  if (hasKey()) toast('Rédaction des comptes rendus en cours…', '', 4000);
+  await after.catch(() => {});
+  while (pendingCloses.size) await Promise.allSettled([...pendingCloses]);
+  await writeQ;
+  if (hasKey()) { await synthesize(doc); await writeDocFiles(doc); }
+  saveSoon(); renderAll();
+  const parts = doc.parts.slice(from), saved = parts.filter(x => x.status === 'saved').length, written = parts.filter(x => x.writeup).length;
+  toast(`${added} partie(s)${hasKey() ? `, ${written} compte(s) rendu(s) rédigé(s)` : ''}${saved ? ` · enregistré dans ${catById(doc.cat).name} / ${doc.folder}` : ' · à télécharger depuis la catégorie'}.`, '', 7000);
   if (rootOK) scanCat(catById(doc.cat)).then(renderAll);
 }
 
@@ -1087,21 +1362,24 @@ function renderNav() {
   $('#navStore').innerHTML = root ? `${IC.disk}<span>${esc(rootName)}${rootOK ? '' : ' (à réautoriser)'}</span>` : `${IC.disk}<span>${FS_OK ? 'Aucun dossier choisi' : 'Stockage dans l’app'}</span>`;
 }
 
-const STATUS = {open:['En cours','open'], summarizing:['Résumé…','summarizing'], saved:['Enregistré','saved'], ready:['À télécharger',''], error:['Erreur','error']};
+const STATUS = {open:['En cours','open'], summarizing:['Rédaction…','summarizing'], saved:['Enregistré','saved'], ready:['À télécharger',''], error:['Erreur','error']};
 function partRow(doc, i) {
-  const p = doc.parts[i], segs = realSegs(p.segments), [lab, cls] = STATUS[p.status] || ['', ''];
+  const p = doc.parts[i], segs = realSegs(p.segments), [lab, cls] = STATUS[p.status] || ['', ''], w = writeupOf(p);
   const end = p.end || (segs.length ? segs[segs.length - 1].t : p.start);
+  const count = p.notes.length ? `${p.notes.length} notes` : `${segs.length} phrases`;
+  const status = p.status !== 'open' && p.status !== 'summarizing' && !w && hasKey() ? ['À rédiger', 'error'] : [lab, cls];
   return `<li class="topic" data-d="${doc.id}" data-p="${i}"><span class="num">${partNo(doc, i)}</span>
-    <div class="grow"><div class="tt">${esc(p.title || liveTitle(segs) || 'Partie ' + partNo(doc, i))}</div>
-    <div class="tm">${fmtT(p.start)} → ${fmtT(end)} · ${segs.length} interventions${p.status === 'saved' ? ' · ' + esc(p.savedAs) : ''}</div></div>
-    <span class="st ${cls}">${lab}</span></li>`;
+    <div class="grow"><div class="tt">${esc((w && w.titre) || p.title || p.label || liveTitle(segs) || 'Partie ' + partNo(doc, i))}</div>
+    <div class="tm">${fmtT(p.start)} → ${fmtT(end)} · ${count}${w && w.chapeau ? ' · ' + esc(trunc(w.chapeau, 90)) : ''}</div></div>
+    <span class="st ${status[1]}">${status[0]}</span></li>`;
 }
 function docCard(doc) {
-  const dur = doc.runs.reduce((a, r) => a + (r.end - r.start), 0);
+  const dur = doc.runs.reduce((a, r) => a + (r.end - r.start), 0), type = TYPES[docType(doc)];
   const where = doc.folder && rootOK ? `<span class="chip">${IC.disk}${esc(doc.folder)}</span>` : '<span class="chip">Dans l’app</span>';
   const prev = doc.diskParts && doc.diskParts.length ? `<li class="topic" data-disk="${esc(doc.folder)}" data-c="${doc.cat}"><span class="num">1–${doc.diskParts.length}</span><div class="grow"><div class="tt">Parties précédentes</div><div class="tm">Déjà sur le disque</div></div></li>` : '';
+  const syn = doc.synthesis && doc.synthesis.synthese[0] ? `<p class="small clamp" style="margin:6px 0 0">${esc(doc.synthesis.synthese[0])}</p>` : '';
   return `<article class="card doc"><header><div class="grow"><b>${esc(docLabel(doc))}</b>
-      <div class="small muted clamp">${doc.parts.length + (doc.diskParts ? doc.diskParts.length : 0)} partie(s)${dur ? ' · ' + fmtDur(dur) : ''}${docSubtitle(doc) ? ' · ' + esc(docSubtitle(doc)) : ''}</div></div>${where}</header>
+      <div class="small muted clamp">${type.label}${doc.source ? ' · ' + esc(doc.source) : ''} · ${doc.parts.length + (doc.diskParts ? doc.diskParts.length : 0)} partie(s)${dur ? ' · ' + fmtDur(dur) : ''}</div>${syn}</div>${where}</header>
     <ol class="topics">${prev}${doc.parts.map((p, i) => partRow(doc, i)).join('')}</ol>
     <footer>
       <button class="btn sm primary" data-act="cont" data-d="${doc.id}">${IC.play}Continuer</button>
@@ -1114,11 +1392,10 @@ function docCard(doc) {
 
 function renderHome() {
   $('#topTitle').innerHTML = '<span>Accueil</span>';
-  const cat = catById(S.curCat);
+  const cat = catById(S.curCat), type = TYPES[cat.type] || TYPES.podcast;
   $('#homeCats').innerHTML = cats.map(c => `<button class="cat ${c.id === cat.id ? 'on' : ''}" style="--c:${c.color}" data-cat="${c.id}"><span class="dot"></span>${esc(c.name)}</button>`).join('')
     + `<button class="cat add" data-cat="+">${IC.plus}Nouvelle</button>`;
   $('#btnGo').style.setProperty('--c', cat.color);
-  // document : nouveau ou suite
   if (S.docMode === 'continue' && !S.continueKey) S.docMode = 'new';
   $$('.segctl button').forEach(b => b.classList.toggle('on', b.dataset.mode === S.docMode));
   const list = docsOf(cat.id), disk = diskOnly(cat.id);
@@ -1129,16 +1406,18 @@ function renderHome() {
     if (!target) { S.docMode = 'new'; S.continueKey = ''; }
   }
   $('#heroDest').innerHTML = `<span class="dot" style="--c:${cat.color}"></span><b>${esc(cat.name)}</b><span class="muted">›</span>` +
-    (target ? `<span>suite de « ${esc(target.label)} » · partie ${target.next}</span>` : `<span class="muted">nouveau document, découpé par sujet</span>`);
+    (target ? `<span>suite de « ${esc(target.label)} » · partie ${target.next}</span>` : `<span class="muted">nouveau document · ${esc(type.label)}</span>`);
   let h = '';
+  if (!hasKey()) h += `<div class="keywarn">${IC.edit}<div class="grow"><b>Clé API manquante.</b> Sans elle, l'app garde seulement la transcription : pas de notes ni de compte rendu.</div><button class="btn sm primary" data-act="settings">Ajouter</button></div>`;
   const rows = [
-    ...list.map(d => ({key: String(d.id), t: docLabel(d), m: `${d.parts.length + (d.diskParts ? d.diskParts.length : 0)} partie(s) · ${fmtD(d.updated || d.created)}${docSubtitle(d) ? ' · ' + docSubtitle(d) : ''}`})),
+    ...list.map(d => ({key: String(d.id), t: docLabel(d), m: `${d.parts.length + (d.diskParts ? d.diskParts.length : 0)} partie(s) · ${fmtD(d.updated || d.created)}${d.source ? ' · ' + d.source : docSubtitle(d) ? ' · ' + docSubtitle(d) : ''}`})),
     ...disk.map(d => ({key: 'disk:' + d.folder, t: d.folder, m: `${d.parts.length} partie(s) · sur le disque`}))];
   if (S.docMode === 'new') {
-    h = `<p class="explain">Chaque écoute crée un document dans <b>${esc(cat.name)}</b>. Au lieu d'un énorme fichier, il est découpé en parties (une par sujet), reliées par un sommaire.</p>`;
-  } else {
-    h = `<p class="explain">Les nouvelles parties seront numérotées à la suite du document choisi.</p>`;
-  }
+    h += `<label class="field" style="margin:4px 0 0">Source <span class="muted small">(facultatif, aide Claude à reconnaître les noms)</span>
+      <input type="text" id="srcInput" placeholder="ex. nom du podcast et de l'épisode, lien de la vidéo…" value="${esc(S.nextSource || '')}" autocomplete="off"></label>
+      <p class="explain">Modèle de notes : <b>${esc(type.label)}</b>. Pendant l'écoute, Claude met les notes au propre environ toutes les ${S.chunkSec || 60} s ; à chaque changement de sujet, la partie est rédigée en compte rendu.</p>`;
+    if (IOS && cat.type === 'podcast') h += `<p class="explain">Sur iPhone, lance plutôt le podcast ou la vidéo sur un autre appareil (ordinateur, enceinte, TV) : quand Safari écoute le micro, la lecture dans les autres apps est généralement interrompue.</p>`;
+  } else h += `<p class="explain">Les nouvelles parties seront numérotées à la suite du document choisi.</p>`;
   if (S.docMode === 'continue' || rows.length) {
     h += `<div class="list">${rows.length ? rows.map(r => `<button class="row ${S.docMode === 'continue' && S.continueKey === r.key ? 'sel' : ''}" data-key="${esc(r.key)}">${IC.doc}<div class="grow"><div class="t">${esc(r.t)}</div><div class="m">${esc(r.m)}</div></div><span class="eye" data-eye="${esc(r.key)}" role="button" aria-label="Sommaire">${IC.eye}</span></button>`).join('')
       : `<p class="empty">Aucun document dans ${esc(cat.name)} pour l’instant.</p>`}</div>`;
@@ -1152,13 +1431,12 @@ function renderHome() {
   let sp = `<div class="tree"><b>${esc(root ? rootName : 'Racine')}</b>/
 └─ <i>${esc(cat.folder)}</i>/            ← catégorie
    └─ ${esc(exDoc)}/   ← document
-      ├─ 00 - Sommaire.md
+      ├─ 00 - Sommaire.md     ← synthèse + liens
       ├─ 01 - Premier sujet.md
       └─ 02 - Sujet suivant.md</div>`;
   if (root && !rootOK) sp += `<button class="btn" id="btnRegrant" style="margin-top:12px">Réautoriser l'accès à « ${esc(rootName)} »</button>`;
   else if (!root) sp += `<p class="explain">${FS_OK ? 'Choisissez un dossier (idéalement dédié) : les parties y seront écrites automatiquement.' : 'Ce navigateur ne peut pas écrire dans un dossier : les documents restent dans l’app, à télécharger en .zip (même structure) ou partie par partie.'}</p>`;
   $('#storePane').innerHTML = sp;
-  // récents
   const rec = list.slice(0, 2);
   $('#recent').innerHTML = rec.length ? `<div class="sec-h"><p class="h">Derniers documents · ${esc(cat.name)}</p><a class="btn sm ghost" href="#/c/${encodeURIComponent(cat.id)}">Tout voir</a></div>` + rec.map(docCard).join('') : '';
 }
@@ -1166,7 +1444,7 @@ function renderHome() {
 function renderCat() {
   const cat = catById(view.id), list = docsOf(cat.id), disk = diskOnly(cat.id);
   $('#topTitle').innerHTML = `<span class="dot" style="--c:${cat.color}"></span><span>${esc(cat.name)}</span>`;
-  $('#catView').innerHTML = `<div class="cat-head"><span class="dot" style="--c:${cat.color}"></span><h1 class="grow">${esc(cat.name)}</h1>
+  $('#catView').innerHTML = `<div class="cat-head"><span class="dot" style="--c:${cat.color}"></span><div class="grow"><h1>${esc(cat.name)}</h1><div class="small muted">${esc((TYPES[cat.type] || TYPES.podcast).label)}</div></div>
       <button class="icon-btn" data-act="editcat" aria-label="Modifier la catégorie">${IC.edit}</button>
       <button class="btn primary" data-act="gohere" style="--accent:${cat.color};color:#06120d">${IC.play}GO ici</button></div>
     ${list.length ? list.map(docCard).join('') : `<div class="card empty">Aucun document dans cette catégorie. Appuyez sur « GO ici » pour en créer un.</div>`}
@@ -1177,45 +1455,76 @@ function renderCat() {
 function renderLive() {
   if (!live) return;
   const doc = live.doc, part = curPart(), segs = realSegs(part.segments), cat = catById(doc.cat);
-  $('#nowKicker').innerHTML = `<span class="num">${partNo(doc, doc.parts.length - 1)}</span><span>${esc(docLabel(doc))}</span><span>·</span><span>${segs.length ? 'partie en cours depuis ' + fmtT(segs[0].t) : 'nouvelle partie, en attente de parole'}</span>`;
-  $('#nowTitle').textContent = liveTitle(segs) || (segs.length ? trunc(segs[0].text, 60) : "À l'écoute…");
-  let items = segs.map(s => ({...s, k:'ok'}));
-  if (S.showRejected) items = items.concat(doc.rejected.filter(r => r.t >= part.start).map(r => ({...r, k:'rej'})));
+  $('#nowKicker').innerHTML = `<span class="num">${partNo(doc, doc.parts.length - 1)}</span><span>${esc(docLabel(doc))}</span><span>·</span><span>${segs.length ? 'partie en cours depuis ' + fmtT(segs[0].t) : 'en attente de parole'}</span>`;
+  $('#nowTitle').textContent = part.label || liveTitle(segs) || (segs.length ? trunc(segs[0].text, 60) : "À l'écoute…");
+  // notes propres
+  const nb = $('#notesBox'), atB = nb.scrollHeight - nb.scrollTop - nb.clientHeight < 40;
+  if (hasKey()) {
+    const items = [...part.notes.map(n => ({t: n.t, text: n.text, k: 'n'})), ...part.quotes.map(q => ({t: q.t, text: `« ${q.texte} »${q.auteur ? ' — ' + q.auteur : ''}`, k: 'q'})),
+      ...part.clean.filter(c => c.raw).map(c => ({t: c.t, text: c.text, k: 'r'}))].sort((a, b) => a.t - b.t);
+    nb.innerHTML = items.length ? items.slice(-80).map(x => `<div class="note ${x.k}"><time>${fmtT(x.t)}</time><p>${x.k === 'r' ? '<span class="tag">texte brut</span> ' : ''}${esc(x.text)}</p></div>`).join('')
+      : `<p class="muted small" style="margin:0">Les notes au propre apparaîtront ici environ toutes les ${S.chunkSec || 60} secondes, au fil de l'écoute.</p>`;
+  } else nb.innerHTML = `<div class="keywarn" style="margin:0">${IC.edit}<div class="grow">Sans clé API, l'app garde seulement la transcription.</div><button class="btn sm primary" data-act="settings">Ajouter une clé</button></div>`;
+  if (atB) nb.scrollTop = nb.scrollHeight;
+  // transcription en direct : ce qui n'est pas encore mis au propre (ou tout, sans clé)
+  let items = (hasKey() ? live.buf : segs).map(s => ({...s, k: 'ok'}));
+  if (S.showRejected) items = items.concat(doc.rejected.filter(r => r.t >= (items[0] ? items[0].t : part.start)).map(r => ({...r, k: 'rej'})));
   items.sort((a, b) => a.t - b.t);
   const box = $('#lines'), atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 40;
-  box.innerHTML = items.slice(-60).map(s => `<div class="ln ${s.k === 'rej' ? 'rej' : ''}"><time>${fmtT(s.t)}</time><p>${esc(s.text)}${s.k === 'rej' ? ` <em>· ${esc(s.reason)}</em>` : ''}</p></div>`).join('')
-    || '<p class="muted small" style="margin:0">Les phrases retenues apparaîtront ici. Le bruit et les voix lointaines sont écartés.</p>';
+  box.innerHTML = items.slice(-30).map(s => `<div class="ln ${s.k === 'rej' ? 'rej' : ''}"><time>${fmtT(s.t)}</time><p>${esc(s.text)}${s.k === 'rej' ? ` <em>· ${esc(s.reason)}</em>` : ''}</p></div>`).join('')
+    || `<p class="muted small" style="margin:0">${hasKey() && segs.length ? 'Tout ce qui a été dit est déjà passé dans les notes.' : 'Les phrases reconnues apparaissent ici.'}</p>`;
   if (atBottom) box.scrollTop = box.scrollHeight;
+  noteStatus();
+  $('#meterCard').hidden = !analyser;
   const doneIdx = doc.parts.map((p, i) => i).slice(0, -1);
   $('#liveTopicsCard').hidden = !doneIdx.length;
   $('#liveTopics').innerHTML = doneIdx.map(i => partRow(doc, i)).join('');
   $('#topTitle').innerHTML = `<span class="dot" style="--c:${cat.color}"></span><span>${esc(cat.name)}</span>`;
 }
+function noteStatus() {
+  if (!live) return;
+  const el = $('#noteStatus');
+  if (!hasKey()) { el.textContent = ''; return; }
+  if (live.stopping) el.innerHTML = '<span class="spin"></span>Arrêt : derniers mots et rédaction…';
+  else if (live.busy) el.innerHTML = '<span class="spin"></span>Mise au propre des notes…';
+  else if (live.buf.length) { const left = Math.max(0, Math.round(((S.chunkSec || 60) * 1000 - (Date.now() - live.buf[0].t)) / 1000)); el.textContent = `${bufWords()} mots en attente · prochaines notes dans ~${left} s`; }
+  else if (live.lastError) el.innerHTML = `<span style="color:var(--warn)">Dernière mise au propre impossible (${esc(live.lastError)}) : le texte brut est gardé.</span>`;
+  else el.textContent = live.lastNotes ? `Notes à jour (${fmtT(live.lastNotes)})` : 'En attente de parole…';
+}
 
 /* Dialogue d'une partie */
 let dlgCtx = null;
-function sumHTML(sm) {
+function writeupHTML(w, p) {
   const L = (t, a) => a && a.length ? `<h4>${t}</h4><ul>${a.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : '';
-  return `<div class="sum">${sm.overview ? `<h4>Résumé</h4><p>${esc(sm.overview)}</p>` : ''}${L('Points clés', sm.keyPoints)}${L('Décisions', sm.decisions)}${L('Actions / à faire', sm.actions)}${L('Questions', sm.questions)}${L('Chiffres & dates', sm.figures)}
-    ${sm.keywords && sm.keywords.length ? `<h4>Mots-clés</h4><div class="kw">${sm.keywords.map(k => `<span>${esc(k)}</span>`).join('')}</div>` : ''}</div>`;
+  const quotes = w.citations.length ? w.citations : (p.quotes || []), refs = w.references.length ? w.references : (p.refs || []);
+  return `<div class="sum">${w.chapeau ? `<p class="chapo">${esc(w.chapeau)}</p>` : ''}
+    ${w.compte_rendu.length ? `<h4>Compte rendu</h4>${w.compte_rendu.map(x => `<p class="para">${esc(x)}</p>`).join('')}` : ''}
+    ${L('À retenir', w.a_retenir)}${L('Décisions', w.decisions)}
+    ${w.actions.length ? `<h4>Actions</h4><div class="tblw"><table class="tbl"><tr><th>Qui</th><th>Quoi</th><th>Quand</th></tr>${w.actions.map(a => `<tr><td>${esc(a.qui || '—')}</td><td>${esc(a.quoi)}</td><td>${esc(a.quand || '—')}</td></tr>`).join('')}</table></div>` : ''}
+    ${w.definitions.length ? `<h4>Définitions</h4><ul>${w.definitions.map(d => `<li><b>${esc(d.terme)}</b> : ${esc(d.definition)}</li>`).join('')}</ul>` : ''}
+    ${quotes.length ? `<h4>Citations</h4>${quotes.map(q => `<blockquote>« ${esc(q.texte)} »${q.auteur ? ` <span class="muted">— ${esc(q.auteur)}</span>` : ''}</blockquote>`).join('')}` : ''}
+    ${refs.length ? `<h4>Références citées</h4><div class="tblw"><table class="tbl"><tr><th>Référence</th><th>Type</th><th>Contexte</th></tr>${refs.map(f => `<tr><td>${esc(f.nom)}</td><td>${esc(f.type || '—')}</td><td>${esc(f.contexte || '—')}</td></tr>`).join('')}</table></div>` : ''}
+    ${L('Questions et pistes', w.questions)}
+    ${w.mots_cles.length ? `<h4>Mots-clés</h4><div class="kw">${w.mots_cles.map(k => `<span>${esc(k)}</span>`).join('')}</div>` : ''}</div>`;
 }
-async function openPart(doc, i, livePeek = false) {
+function openPart(doc, i) {
   const p = doc.parts[i]; if (!p) return;
-  const segs = realSegs(p.segments), n = partNo(doc, i);
+  const n = partNo(doc, i), w = writeupOf(p), segs = realSegs(p.segments);
   dlgCtx = {doc, i};
-  $('#dtTitle').textContent = `${n}. ${p.title || liveTitle(segs) || 'Partie ' + n}`;
-  const body = $('#dtBody');
-  let sm = p.summary;
-  if (!sm) {
-    if (!segs.length) { body.innerHTML = '<p class="muted">Pas encore de phrase retenue dans cette partie.</p>'; $('#dtFoot').innerHTML = ''; $('#dlgTopic').showModal(); return; }
-    body.innerHTML = '<p class="muted">Résumé en cours…</p>'; $('#dtFoot').innerHTML = ''; $('#dlgTopic').showModal();
-    sm = livePeek && S.engine === 'claude' ? await makeSummary(segs) : localSummary(segs);
-    if (!$('#dlgTopic').open || dlgCtx.doc !== doc || dlgCtx.i !== i) return;
-  }
+  $('#dtTitle').textContent = `${n}. ${(w && w.titre) || p.title || p.label || 'Partie ' + n}`;
   const end = p.end || (segs.length ? segs[segs.length - 1].t : p.start);
-  body.innerHTML = `<p class="small muted" style="margin:0 0 14px">${esc(catById(doc.cat).name)} › ${esc(docLabel(doc))} · ${fmtT(p.start)} → ${fmtT(end)} · ${segs.length} interventions${p.status === 'saved' ? '<br>Fichier : ' + esc(doc.folder + '/' + p.savedAs) : ''}${livePeek ? ' · aperçu provisoire' : ''}</p>`
-    + sumHTML(sm) + `<details style="margin-top:16px"><summary class="small muted" style="cursor:pointer">Transcription (${segs.length})</summary><div class="lines" style="max-height:none">${segs.map(s => `<div class="ln"><time>${fmtT(s.t)}</time><p>${esc(s.text)}</p></div>`).join('')}</div></details>`;
-  $('#dtFoot').innerHTML = `<button class="btn" data-x="copy">${IC.copy}Copier</button><button class="btn" data-x="dl">${IC.dl}Télécharger</button>${navigator.canShare ? `<button class="btn" data-x="share">${IC.share}Partager</button>` : ''}`;
+  let h = `<p class="small muted" style="margin:0 0 14px">${esc(catById(doc.cat).name)} › ${esc(docLabel(doc))} · ${fmtT(p.start)} → ${fmtT(end)}${p.status === 'saved' ? '<br>Fichier : ' + esc(doc.folder + '/' + p.savedAs) : ''}${p.status === 'open' ? ' · partie en cours' : ''}</p>`;
+  if (w) h += writeupHTML(w, p);
+  else if (p.status === 'summarizing') h += '<p class="muted">Rédaction du compte rendu en cours…</p>';
+  else if (p.status === 'open') h += '<p class="muted">Le compte rendu sera rédigé à la fin de cette partie. Voici les notes prises jusqu’ici.</p>';
+  else h += `<p class="muted">Compte rendu pas encore rédigé${p.writeupError ? ' (' + esc(p.writeupError) + ')' : ''}.</p>`;
+  if (p.notes.length) h += `<details class="blk" ${!w ? 'open' : ''}><summary>Notes prises pendant l'écoute (${p.notes.length})</summary><div class="notes">${p.notes.map(x => `<div class="note"><time>${fmtT(x.t)}</time><p>${esc(x.text)}</p></div>`).join('')}</div></details>`;
+  const tr = p.clean.length ? p.clean : segs;
+  if (tr.length) h += `<details class="blk" ${!w && !p.notes.length ? 'open' : ''}><summary>Transcription (${tr.length})</summary><div class="lines" style="max-height:none">${tr.map(s => `<div class="ln"><time>${fmtT(s.t)}</time><p>${esc(s.text)}</p></div>`).join('')}</div></details>`;
+  $('#dtBody').innerHTML = h;
+  const canWrite = hasKey() && p.status !== 'open' && p.status !== 'summarizing' && partHasContent(p);
+  $('#dtFoot').innerHTML = `<button class="btn" data-x="copy">${IC.copy}Copier</button><button class="btn" data-x="dl">${IC.dl}Télécharger</button>${navigator.canShare ? `<button class="btn" data-x="share">${IC.share}Partager</button>` : ''}`
+    + (canWrite ? `<span class="grow"></span><button class="btn ${w ? '' : 'primary'}" data-x="rewrite">${IC.edit}${w ? 'Rédiger à nouveau' : 'Rédiger le compte rendu'}</button>` : '');
   if (!$('#dlgTopic').open) $('#dlgTopic').showModal();
 }
 function preview(title, text, foot = '') {
@@ -1235,8 +1544,8 @@ function docFiles(doc) {
   const cat = catById(doc.cat), base = `${cat.folder}/${doc.folder || folderNameFor(doc.created)}/`;
   const files = [{name: base + SOMMAIRE, text: indexMD(doc)}];
   doc.parts.forEach((p, i) => {
-    if (!realSegs(p.segments).length) return;
-    if (!p.title) p.title = liveTitle(realSegs(p.segments)) || 'Partie';
+    if (!partHasContent(p)) return;
+    if (!p.title) p.title = p.label || liveTitle(realSegs(p.segments)) || 'Partie';
     files.push({name: base + (p.savedAs || partFile(doc, i)), text: partMD(doc, i)});
   });
   return files;
@@ -1249,6 +1558,7 @@ function openCatDialog(id = null) {
   catColor = c ? c.color : COLORS[cats.length % COLORS.length];
   $('#dcTitle').textContent = c ? 'Modifier la catégorie' : 'Nouvelle catégorie';
   $('#catName').value = c ? c.name : '';
+  $('#catType').value = c && TYPES[c.type] ? c.type : 'podcast';
   $('#catSave').textContent = c ? 'Enregistrer' : 'Créer';
   $('#catDelete').hidden = !c || cats.length <= 1;
   $('#catHint').textContent = c ? `Dossier sur le disque : ${c.folder} (son nom ne change pas si vous renommez la catégorie).` : 'Un sous-dossier du même nom sera créé dans le dossier racine au premier enregistrement.';
@@ -1389,7 +1699,9 @@ $('#btnNewTopic').addEventListener('click', () => {
   if (!realSegs(curPart().segments).length) { toast('La partie en cours est encore vide.'); return; }
   startNewPart(Date.now(), 'manual'); saveSoon();
 });
-$('#btnPeek').addEventListener('click', () => live && openPart(live.doc, live.doc.parts.length - 1, true));
+$('#btnPeek').addEventListener('click', () => live && openPart(live.doc, live.doc.parts.length - 1));
+document.addEventListener('click', e => { if (e.target.closest('[data-act=settings]')) { closeNav(); $('#dlgSettings').showModal(); } });
+$('#docPane').addEventListener('input', e => { if (e.target.id === 'srcInput') { S.nextSource = e.target.value; saveSettings(); } });
 $('#btnSettings').addEventListener('click', () => $('#dlgSettings').showModal());
 $('#btnSettings2').addEventListener('click', () => { closeNav(); $('#dlgSettings').showModal(); });
 $('#btnAddCat').addEventListener('click', () => { closeNav(); openCatDialog(); });
@@ -1456,15 +1768,16 @@ $('#dpFoot').addEventListener('click', e => {
 $('#dtFoot').addEventListener('click', async e => {
   const b = e.target.closest('[data-x]'); if (!b || !dlgCtx) return;
   const {doc, i} = dlgCtx, p = doc.parts[i];
-  if (!p.title) p.title = liveTitle(realSegs(p.segments)) || 'Partie';
+  if (!p.title) p.title = p.label || liveTitle(realSegs(p.segments)) || 'Partie';
   const text = partMD(doc, i), name = p.savedAs || partFile(doc, i);
   if (b.dataset.x === 'dl') download(mdBlob(text), name);
   if (b.dataset.x === 'share') shareFile(text, name);
   if (b.dataset.x === 'copy') (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(() => toast('Copié.'), () => toast('Copie impossible ici.', 'warn'));
+  if (b.dataset.x === 'rewrite') { b.disabled = true; b.textContent = 'Rédaction…'; await rewritePart(doc, p); if ($('#dlgTopic').open && dlgCtx && dlgCtx.doc === doc && dlgCtx.i === i) openPart(doc, i); }
 });
 $('#catColors').addEventListener('click', e => { const b = e.target.closest('[data-col]'); if (b) { catColor = b.dataset.col; renderSwatches(); } });
 function submitCat() {
-  const c = saveCategory(catEdit, $('#catName').value, catColor);
+  const c = saveCategory(catEdit, $('#catName').value, catColor, $('#catType').value);
   if (!c) { $('#catName').focus(); return; }
   $('#dlgCat').close();
   if (!catEdit) { S.curCat = c.id; S.docMode = 'new'; S.continueKey = ''; saveSettings(); toast(`Catégorie « ${c.name} » créée.`); }
@@ -1488,6 +1801,14 @@ $('#btnClearHist').addEventListener('click', () => {
    Initialisation
    ========================================================= */
 (async function init() {
+  // catégories : type de contenu, et une catégorie dédiée aux podcasts
+  const TYPE_BY_ID = {reunions: 'reunion', cours: 'cours', idees: 'idees'};
+  cats.forEach(c => { if (!TYPES[c.type]) c.type = TYPE_BY_ID[c.id] || 'podcast'; });
+  if (!store.get('ecoute.podcastSeeded', false)) {
+    if (!cats.some(c => c.id === 'podcasts')) cats.splice(1, 0, {id: 'podcasts', name: 'Podcasts & vidéos', folder: 'Podcasts & vidéos', color: COLORS[4], type: 'podcast'});
+    S.curCat = 'podcasts'; saveSettings(); store.set('ecoute.podcastSeeded', true);
+  }
+  saveCats();
   bindSettings();
   try {
     docs = (await idb.get('docs')) || [];
@@ -1496,12 +1817,12 @@ $('#btnClearHist').addEventListener('click', () => {
       docs = old.map(s => ({...newDoc('general', s.start), parts: s.topics.map(t => ({...t, savedAs: ''})), runs: [{start: s.start, end: s.end || s.start}]}));
     }
     for (const d of docs) {
-      if (!catById(d.cat) || !cats.some(c => c.id === d.cat)) d.cat = cats[0].id;
-      d.parts = d.parts.filter(p => realSegs(p.segments).length);
-      for (const p of d.parts) if (p.status === 'open' || p.status === 'summarizing') {
-        const segs = realSegs(p.segments);
-        p.summary = localSummary(segs); p.summary.engine = 'local'; p.title = p.summary.title;
-        p.end = p.end || segs[segs.length - 1].t; p.status = 'ready';
+      if (!cats.some(c => c.id === d.cat)) d.cat = cats[0].id;
+      if (!TYPES[d.type]) d.type = catById(d.cat).type || 'podcast';
+      for (const p of d.parts) { for (const k of ['notes', 'clean', 'quotes', 'refs', 'segments']) if (!Array.isArray(p[k])) p[k] = []; }
+      d.parts = d.parts.filter(partHasContent);
+      for (const p of d.parts) if (p.status === 'open' || p.status === 'summarizing') {   // écoute interrompue brutalement
+        finishPart(p); p.title = p.title || p.label || liveTitle(realSegs(p.segments)) || 'Partie'; p.status = 'ready';
       }
     }
     docs = docs.filter(d => d.parts.length || (d.diskParts && d.diskParts.length));
