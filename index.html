@@ -217,14 +217,14 @@ body.is-live #toasts{bottom:calc(108px + env(safe-area-inset-bottom))}
 .cat-head h1{line-height:1.15}
 /* barre d'onglets, mini-barre du direct */
 :root{--tabh:calc(62px + env(safe-area-inset-bottom))}
-.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:12;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:color-mix(in srgb,var(--panel) 90%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-top:1px solid var(--line);padding:6px 10px calc(6px + env(safe-area-inset-bottom))}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:12;display:grid;grid-template-columns:repeat(2,1fr);gap:4px;background:color-mix(in srgb,var(--panel) 90%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-top:1px solid var(--line);padding:6px 10px calc(6px + env(safe-area-inset-bottom))}
 .tabbar a{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;border-radius:12px;text-decoration:none;color:var(--muted);font-size:11.5px;font-weight:600;font-variant-numeric:tabular-nums}
 .tabbar a.on{color:var(--text);background:var(--panel2)}
 .tabbar a.on svg{color:var(--accent)}
 .tabbar .ti{position:relative;display:grid}
 .tabbar .rdot{position:absolute;top:-2px;right:-5px;width:9px;height:9px;border-radius:50%;background:var(--danger);display:none;animation:blink 1.2s infinite}
 .tabbar.rec .rdot{display:block}
-.tabbar.rec [data-tab=direct],.tabbar.rec [data-tab=direct] svg{color:var(--danger)}
+.tabbar.rec [data-tab=listen],.tabbar.rec [data-tab=listen] svg{color:var(--danger)}
 .tabbar .badge{position:absolute;top:-7px;right:-14px;font-size:10px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--panel2);border:1px solid var(--line);color:var(--muted);display:grid;place-items:center;font-weight:700}
 .tabbar .badge:empty{display:none}
 main{padding-bottom:calc(var(--tabh) + 24px)}
@@ -254,14 +254,82 @@ a.cat{text-decoration:none;color:var(--text)}
 .day{margin:20px 4px 10px}
 .search{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:2px 0 4px;font:inherit;color:var(--text);-webkit-appearance:none;appearance:none}
 .search:focus{outline:2px solid color-mix(in srgb,var(--accent) 50%,transparent);outline-offset:1px}
+/* écoute en cours : le résumé qui se construit */
+.livehead{padding:18px}
+.lhstate{display:flex;align-items:center;gap:10px;font-size:17px}
+.lclock{margin-left:auto;font-variant-numeric:tabular-nums;font-weight:650;color:var(--muted)}
+.pulse{width:12px;height:12px;border-radius:50%;background:var(--danger);animation:pulse2 1.6s infinite;flex:none}
+@keyframes pulse2{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--danger) 55%,transparent)}100%{box-shadow:0 0 0 10px transparent}}
+.lhsub{color:var(--muted);font-size:14px;margin-top:4px}
+.lhacts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.lhacts .btn{min-height:46px}
+.stopbtn{background:var(--danger)!important;color:#fff!important;border-color:transparent!important}
+.stopbtn svg{fill:currentColor;stroke:none;width:14px;height:14px}
+.lwarn{margin:12px 0 0;font-size:13px;color:var(--warn)}
+.bpart{display:flex;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:12px}
+.bnum{width:30px;height:30px;border-radius:10px;background:var(--panel2);border:1px solid var(--line);display:grid;place-items:center;font-weight:700;font-size:13px;flex:none}
+.bpart h3{margin:2px 0 6px;font-size:17px;line-height:1.3}
+.bmeta{font-size:12px;color:var(--muted)}
+.bchapo{margin:0 0 8px;font-weight:550;line-height:1.5}
+.bpts{margin:0;padding-left:18px;line-height:1.5}.bpts li{margin:3px 0}
+.bline{margin:4px 0 0;font-size:13px;display:flex;align-items:center;gap:8px}
+.bpart.cur{border-style:dashed;background:transparent}
+.listening{display:flex;align-items:flex-end;gap:4px;height:18px;margin:10px 0 4px}
+.listening span{width:4px;height:4px;border-radius:2px;background:var(--accent);animation:lst 1.2s ease-in-out infinite}
+.listening span:nth-child(2){animation-delay:.15s}.listening span:nth-child(3){animation-delay:.3s}.listening span:nth-child(4){animation-delay:.45s}.listening span:nth-child(5){animation-delay:.6s}
+@keyframes lst{0%,100%{height:4px;opacity:.45}50%{height:18px;opacity:1}}
+/* bibliothèque */
+.lib-head{display:flex;align-items:baseline;gap:10px;margin:4px 4px 14px}
+.lib-head h1{margin:0;font-size:28px;letter-spacing:-.02em}
+.lib-cats{margin:10px 0 6px}
+.lib-cat{display:flex;align-items:center;justify-content:space-between;font-size:13px;margin:0 4px 10px}
+.linkbtn{border:0;background:none;color:var(--accent);font:inherit;font-size:13px;font-weight:600;padding:4px 0;cursor:pointer}
+.rrow{display:flex;align-items:flex-start;gap:14px;width:100%;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 12px 14px 0;margin-bottom:10px;overflow:hidden;color:var(--text)}
+.rrow:hover{border-color:var(--muted)}
+.rbar{width:4px;align-self:stretch;border-radius:0 4px 4px 0;background:var(--c);flex:none}
+.rt{font-weight:650;font-size:16px;line-height:1.3}
+.rm{font-size:12.5px;color:var(--muted);margin-top:4px}
+.rm .dot{width:8px;height:8px;background:var(--c);display:inline-block;margin-right:5px;vertical-align:0}
+.rsrc{font-size:13px;margin-top:4px;font-style:italic;color:var(--muted)}
+.rs{font-size:14px;line-height:1.45;margin-top:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.rstate{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;margin-top:8px;color:var(--muted)}
+.rstate.live{color:var(--danger)}.rstate.warn{color:var(--warn)}
+.chev{color:var(--muted);align-self:center;flex:none}
+.lib-empty{text-align:center;color:var(--muted);padding:44px 20px;line-height:1.6}
+/* page d'un enregistrement */
+.back{display:inline-block;margin:0 0 14px;color:var(--accent);text-decoration:none;font-weight:600;font-size:15px}
+.rd-head{padding:4px 4px 22px;border-bottom:1px solid var(--line)}
+.rd-cat{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.rd-head .dot{background:var(--c)}
+.rd-head h1{margin:10px 0 8px;font-size:28px;line-height:1.2;letter-spacing:-.02em}
+.rd-meta{font-size:14px;color:var(--muted);line-height:1.55}
+.rd-meta b{color:var(--text);font-weight:600}
+.rd-acts{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.rd-sec{padding:24px 4px;border-bottom:1px solid var(--line)}
+.rd-sec h2{font-size:21px;margin:4px 0 12px;letter-spacing:-.01em;line-height:1.3}
+.rd-sec .para{font-size:16px;line-height:1.7;margin:0 0 14px}
+.rd-sec .chapo{font-size:17px;line-height:1.55;margin:0 0 14px}
+.rd-key{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 16px;margin-top:6px}
+.rd-key h4{margin:0 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.rd-key ul{margin:0;padding-left:18px;line-height:1.55}
+.rd-toc ol{list-style:none;margin:0;padding:0}
+.rd-toc li{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px dashed var(--line)}
+.rd-toc li:last-child{border-bottom:0}
+.rd-toc li button{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:0;background:none;padding:0;font:inherit;color:var(--text);cursor:pointer}
+.tn{width:26px;height:26px;border-radius:8px;background:var(--panel2);border:1px solid var(--line);display:grid;place-items:center;font-size:12px;font-weight:700;flex:none}
+.rd-pnum{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+.rd-part{scroll-margin-top:76px}
+.rd-pacts{display:flex;gap:18px;flex-wrap:wrap;margin-top:16px}
+.rd-foot{padding:22px 4px;display:flex;flex-direction:column;gap:12px;align-items:flex-start}
+.rd-foot svg{width:14px;height:14px;vertical-align:-2px}
+.rd-foot p{margin:0}
 .banner{font-size:13px;padding:10px 12px;border-radius:12px;background:color-mix(in srgb,var(--warn) 12%,var(--panel));border:1px solid color-mix(in srgb,var(--warn) 40%,var(--line));margin-bottom:14px}
 </style>
 </head>
 <body>
 <nav class="nav" id="nav" aria-label="Navigation">
   <div class="logo"><i><svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></i>Écoute</div>
-  <a class="nav-i" href="#/" data-nav="home"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10 8.5v7l6-3.5z"/></svg>Accueil</a>
-  <a class="nav-i" href="#/direct" data-nav="direct"><svg viewBox="0 0 24 24"><path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2"/></svg>Direct<span class="n" id="navLive"></span></a>
+  <a class="nav-i" href="#/" data-nav="listen"><svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>Écoute<span class="n" id="navLive"></span></a>
   <a class="nav-i" href="#/enregistrements" data-nav="recs"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg>Enregistrements<span class="n" id="navRecCount"></span></a>
   <div class="nav-sec"><span>Catégories</span><button id="btnAddCat" aria-label="Nouvelle catégorie"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button></div>
   <div id="navCats"></div>
@@ -291,7 +359,7 @@ a.cat{text-decoration:none;color:var(--text)}
     </div>
     <div class="card">
       <div class="segctl" role="tablist">
-        <button data-mode="new" role="tab">Nouveau document</button>
+        <button data-mode="new" role="tab">Nouvel enregistrement</button>
         <button data-mode="continue" role="tab">Continuer</button>
       </div>
       <div id="docPane"></div>
@@ -313,47 +381,35 @@ a.cat{text-decoration:none;color:var(--text)}
 
   <!-- ÉCOUTE -->
   <section id="live" hidden>
-    <div id="liveOff"></div>
-    <div id="liveOn">
-    <div class="card now">
-      <div class="kicker" id="nowKicker"></div>
-      <button class="btn primary" id="btnResume" hidden style="margin-top:12px;width:100%">Reprendre l'écoute</button>
-      <h2 id="nowTitle">À l'écoute…</h2>
-      <div class="nstatus" id="noteStatus"></div>
-      <div class="notes" id="notesBox"></div>
+    <div class="card livehead">
+      <div class="lhstate" id="lhState"></div>
+      <div class="lhsub" id="lhSub"></div>
+      <button class="btn primary" id="btnResume" hidden style="margin-top:14px;width:100%">Reprendre l'écoute</button>
+      <div class="lhacts" id="lhActs">
+        <button class="btn" id="btnNewTopic"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Nouvelle partie</button>
+        <button class="btn stopbtn" id="btnStop"><svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>Arrêter</button>
+      </div>
+      <div id="lhWarn"></div>
     </div>
-    <div class="card">
-      <p class="h">En direct</p>
-      <div class="lines raw" id="lines"></div>
-      <div class="interim" id="interim"></div>
-    </div>
-    <div class="card" id="meterCard">
-      <div class="meter"><span class="vad" id="vadBadge">—</span><canvas id="meter"></canvas></div>
-      <div class="vadstats" id="vadStats"></div>
-    </div>
-    <div class="card" id="liveTopicsCard" hidden>
-      <p class="h">Parties terminées</p>
-      <ol class="topics" id="liveTopics"></ol>
-    </div>
-    </div>
+    <div class="sec-h"><p class="h">Le résumé</p></div>
+    <div id="buildList"></div>
+    <p class="hint" id="buildHint" style="margin:14px 4px 0"></p>
+    <div hidden><div id="interim"></div><span id="vadBadge"></span><div id="vadStats"></div><canvas id="meter"></canvas></div>
   </section>
+
+  <section id="reader" hidden></section>
 </main>
 
-<div class="minilive" id="miniLive" hidden role="button" tabindex="0" aria-label="Voir le direct">
+<div class="minilive" id="miniLive" hidden role="button" tabindex="0" aria-label="Revenir à l'écoute">
   <span class="mdot"></span><div class="grow"><div class="mt" id="miniTitle"></div><div class="ms" id="miniSub"></div></div>
   <span class="mclock" id="miniClock">00:00</span>
   <button class="mstop" id="miniStop" aria-label="Arrêter l'écoute"><svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg></button>
 </div>
 <nav class="tabbar" id="tabbar" aria-label="Sections">
-  <a href="#/" data-tab="home"><span class="ti"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10 8.5v7l6-3.5z"/></svg></span><span>Accueil</span></a>
-  <a href="#/direct" data-tab="direct"><span class="ti"><svg viewBox="0 0 24 24"><path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2"/></svg><i class="rdot"></i></span><span id="tabDirectLbl">Direct</span></a>
-  <a href="#/enregistrements" data-tab="recs"><span class="ti"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg><b class="badge" id="tabRecCount"></b></span><span>Enregistrements</span></a>
+  <a href="#/" data-tab="listen"><span class="ti"><svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><i class="rdot"></i></span><span id="tabListenLbl">Écoute</span></a>
+  <a href="#/enregistrements" data-tab="recs"><span class="ti"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg></span><span>Enregistrements</span></a>
 </nav>
-<div class="actionbar" id="actionbar" hidden><div class="in">
-  <button class="btn" id="btnNewTopic"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Nouvelle partie</button>
-  <button class="stop" id="btnStop" aria-label="Arrêter"><svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg></button>
-  <button class="btn" id="btnPeek"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Aperçu</button>
-</div></div>
+
 
 <dialog id="dlgTopic">
   <div class="dlg-h"><h3 id="dtTitle"></h3><button class="icon-btn" data-close aria-label="Fermer"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
@@ -1292,7 +1348,7 @@ function saveCategory(id, name, color, type) {
    Démarrage / arrêt
    ========================================================= */
 async function go(catId = S.curCat, continueKey = S.docMode === 'continue' ? S.continueKey : '') {
-  if (live) { location.hash = '#/direct'; return; }
+  if (live) { location.hash = '#/'; return; }
   if (!SR) { toast("Ce navigateur ne propose pas la reconnaissance vocale. Utilisez Chrome, Edge ou Safari.", 'err', 7000); return; }
   if (root && !rootOK) {          // l'autorisation doit être demandée dans le geste de l'utilisateur
     rootOK = await hasPerm(root, true);
@@ -1324,7 +1380,7 @@ async function go(catId = S.curCat, continueKey = S.docMode === 'continue' ? S.c
   doc.parts.push(newPart(now)); doc.updated = now;
   live = {doc, start: now, from: doc.parts.length - 1, buf: [], busy: false, lastNotes: 0, stopping: false};
   fgLevel = 0; frames.length = 0; hist.length = 0;
-  if (location.hash === '#/direct') showView(); else location.hash = '#/direct';
+  if (view.name === 'listen') showView(); else location.hash = '#/';
   saveSoon();
 
   // La reconnaissance démarre tout de suite, pendant le toucher : Safari l'exige.
@@ -1363,84 +1419,73 @@ async function stopLive(silent = false) {
   live = null;
   if (p && p.status === 'open') { if (partHasContent(p)) closePart(p, doc, after); else doc.parts.pop(); }
   const added = Math.max(0, doc.parts.length - from);
-  if (added) doc.runs.push({start, end: Date.now()});
+  if (added) { doc.runs.push({start, end: Date.now()}); finalizing = {doc}; }
   if (!doc.parts.length) docs.splice(docs.indexOf(doc), 1);
-  saveSoon();
-  const dest = added ? '#/enregistrements/' + encodeURIComponent(doc.cat) : '#/';
-  if (location.hash === dest) showView(); else location.hash = dest;
+  saveSoon(); showView();
   if (!added) { if (!silent) toast('Aucune phrase retenue pendant cette écoute.'); return; }
-  if (hasKey()) toast('Rédaction des comptes rendus en cours…', '', 4000);
   await after.catch(() => {});
   while (pendingCloses.size) await Promise.allSettled([...pendingCloses]);
   await writeQ;
   if (hasKey()) { await synthesize(doc); await writeDocFiles(doc); }
-  saveSoon(); renderAll();
-  const parts = doc.parts.slice(from), saved = parts.filter(x => x.status === 'saved').length, written = parts.filter(x => x.writeup).length;
-  toast(`${added} partie(s)${hasKey() ? `, ${written} compte(s) rendu(s) rédigé(s)` : ''}${saved ? ` · enregistré dans ${catById(doc.cat).name} / ${doc.folder}` : ' · à télécharger depuis la catégorie'}.`, '', 7000);
+  if (finalizing && finalizing.doc === doc) finalizing = null;
+  saveSoon();
+  // l'enregistrement terminé s'ouvre, sauf si une autre écoute a commencé entre-temps
+  if (view.name === 'listen' && !live) location.hash = '#/doc/' + doc.id; else showView();
+  const saved = doc.parts.slice(from).filter(x => x.status === 'saved').length;
+  toast(`Enregistrement prêt${saved ? ` · fichiers dans ${catById(doc.cat).name} / ${doc.folder}` : ''}.`, '', 5000);
   if (rootOK) scanCat(catById(doc.cat)).then(renderAll);
 }
 
 /* =========================================================
    Navigation et rendu
    ========================================================= */
-let view = {name:'home'};
-// #/ accueil · #/direct · #/enregistrements[/catégorie]  (#/c/… reste accepté)
+let view = {name:'listen'};
+let finalizing = null;
+let lastRecFilter = null;   // filtre de la bibliothèque, pour le bouton retour          // document en cours de finalisation après l'arrêt
+// #/ écoute · #/enregistrements[/catégorie] · #/doc/<id>   (#/direct et #/c/… restent acceptés)
 function route() {
   const h = location.hash; let m;
-  if (/^#\/direct\/?$/.test(h)) view = {name:'direct'};
+  if ((m = h.match(/^#\/doc\/(.+)$/))) view = {name:'doc', id: decodeURIComponent(m[1])};
   else if ((m = h.match(/^#\/(?:enregistrements|c)(?:\/(.+))?$/))) { const id = m[1] && decodeURIComponent(m[1]); view = {name:'recs', id: id && cats.some(c => c.id === id) ? id : null}; }
-  else view = {name:'home'};
-  if (view.name === 'recs' && view.id && !live) { S.curCat = view.id; saveSettings(); }
+  else view = {name:'listen'};
   closeNav(); showView(); window.scrollTo(0, 0);
 }
 function openNav() { $('#nav').classList.add('open'); $('#scrim').classList.add('on'); }
 function closeNav() { $('#nav').classList.remove('open'); $('#scrim').classList.remove('on'); }
 function showView() {
-  const isLive = !!live, v = view.name;
-  $('#home').hidden = v !== 'home';
+  const v = view.name, busy = !!(live || finalizing);
+  $('#home').hidden = !(v === 'listen' && !busy);
+  $('#live').hidden = !(v === 'listen' && busy);
   $('#catView').hidden = v !== 'recs';
-  $('#live').hidden = v !== 'direct';
-  $('#actionbar').hidden = !(isLive && v === 'direct');
-  $('#miniLive').hidden = !(isLive && v !== 'direct');
-  $('#livePill').hidden = !isLive;
-  document.body.classList.toggle('is-live', isLive && v === 'direct');
-  document.body.classList.toggle('has-mini', isLive && v !== 'direct');
+  $('#reader').hidden = v !== 'doc';
+  $('#miniLive').hidden = !(live && v !== 'listen');
+  $('#livePill').hidden = !live;
+  document.body.classList.toggle('has-mini', !!live && v !== 'listen');
   renderAll();
 }
 function setPill(st) { $('#livePill').className = 'pill ' + (st || ''); }
 function renderAll() {
   renderNav(); renderTabs(); renderMini();
-  if (view.name === 'direct') {
-    $('#liveOn').hidden = !live; $('#liveOff').hidden = !!live;
-    if (live) renderLive(); else renderIdle();
-  } else if (view.name === 'recs') { if (document.activeElement && document.activeElement.id === 'recSearch') renderRecList(); else renderRecs(); }
-  else if (!(document.activeElement && document.activeElement.id === 'srcInput')) renderHome();
+  const typing = document.activeElement && document.activeElement.id;
+  if (view.name === 'listen') { if (live || finalizing) renderLive(); else if (typing !== 'srcInput') renderHome(); }
+  else if (view.name === 'recs') { if (typing === 'recSearch') renderRecList(); else renderRecs(); }
+  else if (view.name === 'doc') renderDoc();
 }
 function renderTabs() {
-  $$('#tabbar [data-tab]').forEach(a => a.classList.toggle('on', a.dataset.tab === view.name));
+  $$('#tabbar [data-tab]').forEach(a => a.classList.toggle('on', a.dataset.tab === (view.name === 'doc' ? 'recs' : view.name)));
   $('#tabbar').classList.toggle('rec', !!live);
-  $('#tabDirectLbl').textContent = live ? fmtClock(Date.now() - live.start) : 'Direct';
-  $('#tabRecCount').textContent = docs.length ? (docs.length > 99 ? '99+' : docs.length) : '';
+  $('#tabListenLbl').textContent = live ? fmtClock(Date.now() - live.start) : 'Écoute';
 }
 function renderMini() {
   if (!live) return;
   const doc = live.doc, part = curPart(), cat = catById(doc.cat);
-  $('#miniTitle').textContent = part.label || liveTitle(realSegs(part.segments)) || "À l'écoute…";
-  $('#miniSub').textContent = `${cat.name} · partie ${partNo(doc, doc.parts.length - 1)} · ${part.notes.length ? part.notes.length + ' notes' : realSegs(part.segments).length + ' phrases'}`;
+  const done = doc.parts.filter(p => p.writeup).length;
+  $('#miniTitle').textContent = doc.source || cat.name;
+  $('#miniSub').textContent = `Partie ${partNo(doc, doc.parts.length - 1)}${part.label ? ' · ' + part.label : ''}${done ? ` · ${done} résumé${done > 1 ? 's' : ''} prêt${done > 1 ? 's' : ''}` : ''}`;
 }
-function renderIdle() {
-  const cat = catById(S.curCat), last = docs[0];
-  $('#topTitle').innerHTML = '<span>Direct</span>';
-  $('#liveOff').innerHTML = `<div class="card idle"><div class="ic"><svg viewBox="0 0 24 24"><path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2"/></svg></div>
-      <h2>Aucune écoute en cours</h2>
-      <p class="muted">Lancez une écoute : la transcription, les notes et les parties apparaîtront ici en temps réel.</p>
-      <button class="btn primary" data-act="startdirect" style="--accent:${cat.color};color:#06120d">${IC.play}GO · ${esc(cat.name)}</button></div>
-    ${last ? `<div class="sec-h"><p class="h">Dernier enregistrement</p><a class="btn sm ghost" href="#/enregistrements">Tout voir</a></div>${docCard(last)}` : ''}`;
-}
-
 function renderNav() {
   const active = view.name === 'recs' ? view.id : null;
-  $$('[data-nav]').forEach(a => a.classList.toggle('on', a.dataset.nav === view.name && !(view.name === 'recs' && view.id)));
+  $$('[data-nav]').forEach(a => a.classList.toggle('on', a.dataset.nav === (view.name === 'doc' ? 'recs' : view.name) && !(view.name === 'recs' && view.id)));
   $('#navLive').innerHTML = live ? '<span style="color:var(--danger)">● en cours</span>' : '';
   $('#navRecCount').textContent = docs.length || '';
   $('#navCats').innerHTML = cats.map(c => {
@@ -1450,190 +1495,216 @@ function renderNav() {
   $('#navStore').innerHTML = root ? `${IC.disk}<span>${esc(rootName)}${rootOK ? '' : ' (à réautoriser)'}</span>` : `${IC.disk}<span>${FS_OK ? 'Aucun dossier choisi' : 'Stockage dans l’app'}</span>`;
 }
 
-const STATUS = {open:['En cours','open'], summarizing:['Rédaction…','summarizing'], saved:['Enregistré','saved'], ready:['À télécharger',''], error:['Erreur','error']};
-function partRow(doc, i) {
-  const p = doc.parts[i], segs = realSegs(p.segments), [lab, cls] = STATUS[p.status] || ['', ''], w = writeupOf(p);
-  const end = p.end || (segs.length ? segs[segs.length - 1].t : p.start);
-  const count = p.notes.length ? `${p.notes.length} notes` : `${segs.length} phrases`;
-  const status = p.status !== 'open' && p.status !== 'summarizing' && !w && hasKey() ? ['À rédiger', 'error'] : [lab, cls];
-  return `<li class="topic" data-d="${doc.id}" data-p="${i}"><span class="num">${partNo(doc, i)}</span>
-    <div class="grow"><div class="tt">${esc((w && w.titre) || p.title || p.label || liveTitle(segs) || 'Partie ' + partNo(doc, i))}</div>
-    <div class="tm">${fmtT(p.start)} → ${fmtT(end)} · ${count}${w && w.chapeau ? ' · ' + esc(trunc(w.chapeau, 90)) : ''}</div></div>
-    <span class="st ${status[1]}">${status[0]}</span></li>`;
-}
-function docCard(doc) {
-  const dur = doc.runs.reduce((a, r) => a + (r.end - r.start), 0), type = TYPES[docType(doc)];
-  const where = doc.folder && rootOK ? `<span class="chip">${IC.disk}${esc(doc.folder)}</span>` : '<span class="chip">Dans l’app</span>';
-  const prev = doc.diskParts && doc.diskParts.length ? `<li class="topic" data-disk="${esc(doc.folder)}" data-c="${doc.cat}"><span class="num">1–${doc.diskParts.length}</span><div class="grow"><div class="tt">Parties précédentes</div><div class="tm">Déjà sur le disque</div></div></li>` : '';
-  const syn = doc.synthesis && doc.synthesis.synthese[0] ? `<p class="small clamp" style="margin:6px 0 0">${esc(doc.synthesis.synthese[0])}</p>` : '';
-  return `<article class="card doc"><header><div class="grow"><b>${esc(docLabel(doc))}</b>
-      <div class="small muted clamp">${type.label}${doc.source ? ' · ' + esc(doc.source) : ''} · ${doc.parts.length + (doc.diskParts ? doc.diskParts.length : 0)} partie(s)${dur ? ' · ' + fmtDur(dur) : ''}</div>${syn}</div>${where}</header>
-    <ol class="topics">${prev}${doc.parts.map((p, i) => partRow(doc, i)).join('')}</ol>
-    <footer>
-      ${live && live.doc === doc ? '<a class="btn sm primary" href="#/direct" style="--accent:var(--danger);color:#fff">● En direct</a>' : `<button class="btn sm primary" data-act="cont" data-d="${doc.id}">${IC.play}Continuer</button>`}
-      <button class="btn sm" data-act="index" data-d="${doc.id}">${IC.list}Sommaire</button>
-      <button class="btn sm" data-act="zip" data-d="${doc.id}">${IC.dl}.zip</button>
-      <span class="grow"></span>
-      <button class="btn sm ghost danger" data-act="del" data-d="${doc.id}">Retirer</button>
-    </footer></article>`;
+/* ---------- aides d'affichage ---------- */
+const displayTitle = d => d.title || (d.parts.find(p => p.writeup && p.writeup.titre) || {writeup: {}}).writeup.titre || (d.parts.find(p => p.title) || {}).title || `Écoute du ${fmtD(d.created)} · ${fmtT(d.created)}`;
+const docDur = d => d.runs.reduce((a, r) => a + (r.end - r.start), 0);
+const relDate = t => {
+  const d = new Date(t), now = new Date(), y = new Date(now); y.setDate(now.getDate() - 1);
+  if (d.toDateString() === now.toDateString()) return `Aujourd'hui, ${fmtT(t)}`;
+  if (d.toDateString() === y.toDateString()) return `Hier, ${fmtT(t)}`;
+  return d.toLocaleDateString('fr-FR', {day:'numeric', month:'short', ...(d.getFullYear() !== now.getFullYear() ? {year:'numeric'} : {})});
+};
+const nParts = d => d.parts.length + (d.diskParts ? d.diskParts.length : 0);
+const plural = (n, w) => `${n} ${w}${n > 1 ? 's' : ''}`;
+function docState(d) {
+  if (live && live.doc === d) return ['live', '● En cours d’écoute'];
+  if (finalizing && finalizing.doc === d) return ['busy', 'Finalisation…'];
+  if (d.parts.some(p => p.status === 'summarizing')) return ['busy', 'Rédaction…'];
+  const miss = d.parts.filter(p => !writeupOf(p) && partHasContent(p)).length;
+  if (miss && hasKey()) return ['warn', `${plural(miss, 'partie')} à rédiger`];
+  return null;
 }
 
+/* ---------- Onglet Écoute : accueil (avant GO) ---------- */
 function renderHome() {
-  $('#topTitle').innerHTML = '<span>Accueil</span>';
+  $('#topTitle').innerHTML = '<span>Écoute</span>';
   const cat = catById(S.curCat), type = TYPES[cat.type] || TYPES.podcast;
   $('#homeCats').innerHTML = cats.map(c => `<button class="cat ${c.id === cat.id ? 'on' : ''}" style="--c:${c.color}" data-cat="${c.id}"><span class="dot"></span>${esc(c.name)}</button>`).join('')
     + `<button class="cat add" data-cat="+">${IC.plus}Nouvelle</button>`;
-  $('#btnGo').style.setProperty('--c', live ? '#ef6b6b' : cat.color);
-  $('#btnGo').textContent = live ? 'EN COURS' : 'GO'; $('#btnGo').classList.toggle('busy', !!live);
+  $('#btnGo').style.setProperty('--c', cat.color);
   if (S.docMode === 'continue' && !S.continueKey) S.docMode = 'new';
   $$('.segctl button').forEach(b => b.classList.toggle('on', b.dataset.mode === S.docMode));
   const list = docsOf(cat.id), disk = diskOnly(cat.id);
   let target = null;
   if (S.docMode === 'continue') {
     if (S.continueKey.startsWith('disk:')) { const d = disk.find(x => 'disk:' + x.folder === S.continueKey); if (d) target = {label: d.folder, next: d.parts.length + 1}; }
-    else { const d = list.find(x => String(x.id) === S.continueKey); if (d) target = {label: docLabel(d), next: (d.diskParts ? d.diskParts.length : 0) + d.parts.length + 1}; }
+    else { const d = list.find(x => String(x.id) === S.continueKey); if (d) target = {label: displayTitle(d), next: nParts(d) + 1}; }
     if (!target) { S.docMode = 'new'; S.continueKey = ''; }
   }
-  $('#heroDest').innerHTML = live ? `<span class="dot" style="--c:var(--danger)"></span><b>Écoute en cours</b><span class="muted">· ${esc(catById(live.doc.cat).name)} · touchez pour voir le direct</span>` : `<span class="dot" style="--c:${cat.color}"></span><b>${esc(cat.name)}</b><span class="muted">›</span>` +
-    (target ? `<span>suite de « ${esc(target.label)} » · partie ${target.next}</span>` : `<span class="muted">nouveau document · ${esc(type.label)}</span>`);
+  $('#heroDest').innerHTML = `<span class="dot" style="--c:${cat.color}"></span><b>${esc(cat.name)}</b><span class="muted">›</span>` +
+    (target ? `<span>suite de « ${esc(target.label)} » · partie ${target.next}</span>` : `<span class="muted">nouvel enregistrement · ${esc(type.label)}</span>`);
   let h = '';
-  if (!hasKey()) h += `<div class="keywarn">${IC.edit}<div class="grow"><b>Clé API manquante.</b> Sans elle, l'app garde seulement la transcription : pas de notes ni de compte rendu.</div><button class="btn sm primary" data-act="settings">Ajouter</button></div>`;
+  if (!hasKey()) h += `<div class="keywarn">${IC.edit}<div class="grow"><b>Clé API manquante.</b> Sans elle, l'app garde seulement la transcription : pas de résumé.</div><button class="btn sm primary" data-act="settings">Ajouter</button></div>`;
   const rows = [
-    ...list.map(d => ({key: String(d.id), t: docLabel(d), m: `${d.parts.length + (d.diskParts ? d.diskParts.length : 0)} partie(s) · ${fmtD(d.updated || d.created)}${d.source ? ' · ' + d.source : docSubtitle(d) ? ' · ' + docSubtitle(d) : ''}`})),
-    ...disk.map(d => ({key: 'disk:' + d.folder, t: d.folder, m: `${d.parts.length} partie(s) · sur le disque`}))];
+    ...list.map(d => ({key: String(d.id), t: displayTitle(d), m: `${plural(nParts(d), 'partie')} · ${relDate(d.updated || d.created)}${d.source ? ' · ' + d.source : ''}`})),
+    ...disk.map(d => ({key: 'disk:' + d.folder, t: d.folder, m: `${plural(d.parts.length, 'partie')} · sur le disque`}))];
   if (S.docMode === 'new') {
     h += `<label class="field" style="margin:4px 0 0">Source <span class="muted small">(facultatif, aide Claude à reconnaître les noms)</span>
       <input type="text" id="srcInput" placeholder="ex. nom du podcast et de l'épisode, lien de la vidéo…" value="${esc(S.nextSource || '')}" autocomplete="off"></label>
-      <p class="explain">Modèle de notes : <b>${esc(type.label)}</b>. Pendant l'écoute, Claude met les notes au propre environ toutes les ${S.chunkSec || 60} s ; à chaque changement de sujet, la partie est rédigée en compte rendu.</p>`;
+      <p class="explain">Modèle : <b>${esc(type.label)}</b>. Pendant l'écoute, l'app prend des notes en arrière-plan et rédige le résumé de chaque sujet dès qu'il se termine.</p>`;
     if (IOS && cat.type === 'podcast') h += `<p class="explain">Sur iPhone, lance plutôt le podcast ou la vidéo sur un autre appareil (ordinateur, enceinte, TV) : quand Safari écoute le micro, la lecture dans les autres apps est généralement interrompue.</p>`;
-  } else h += `<p class="explain">Les nouvelles parties seront numérotées à la suite du document choisi.</p>`;
-  if (S.docMode === 'continue' || rows.length) {
-    h += `<div class="list">${rows.length ? rows.map(r => `<button class="row ${S.docMode === 'continue' && S.continueKey === r.key ? 'sel' : ''}" data-key="${esc(r.key)}">${IC.doc}<div class="grow"><div class="t">${esc(r.t)}</div><div class="m">${esc(r.m)}</div></div><span class="eye" data-eye="${esc(r.key)}" role="button" aria-label="Sommaire">${IC.eye}</span></button>`).join('')
-      : `<p class="empty">Aucun document dans ${esc(cat.name)} pour l’instant.</p>`}</div>`;
-    if (S.docMode === 'new' && rows.length) h += `<p class="hint" style="margin:6px 4px 0">Touchez un document pour le continuer au lieu d’en créer un nouveau.</p>`;
+  } else {
+    h += `<p class="explain">Choisis l'enregistrement à poursuivre : les nouvelles parties s'ajouteront à la suite.</p>`;
+    h += `<div class="list">${rows.length ? rows.map(r => `<button class="row ${S.continueKey === r.key ? 'sel' : ''}" data-key="${esc(r.key)}">${IC.doc}<div class="grow"><div class="t">${esc(r.t)}</div><div class="m">${esc(r.m)}</div></div></button>`).join('')
+      : `<p class="empty">Aucun enregistrement dans ${esc(cat.name)} pour l’instant.</p>`}</div>`;
   }
   $('#docPane').innerHTML = h;
-  // stockage
   $('#rootName').textContent = root ? rootName + (rootOK ? '' : ' (à réautoriser)') : FS_OK ? 'Aucun dossier choisi' : 'Non disponible sur ce navigateur';
   $('#btnRoot').textContent = root ? 'Changer' : 'Choisir'; $('#btnRoot').hidden = !FS_OK;
   const exDoc = target ? target.label : folderNameFor(Date.now());
   let sp = `<div class="tree"><b>${esc(root ? rootName : 'Racine')}</b>/
 └─ <i>${esc(cat.folder)}</i>/            ← catégorie
-   └─ ${esc(exDoc)}/   ← document
+   └─ ${esc(exDoc)}/   ← enregistrement
       ├─ 00 - Sommaire.md     ← synthèse + liens
       ├─ 01 - Premier sujet.md
       └─ 02 - Sujet suivant.md</div>`;
   if (root && !rootOK) sp += `<button class="btn" id="btnRegrant" style="margin-top:12px">Réautoriser l'accès à « ${esc(rootName)} »</button>`;
-  else if (!root) sp += `<p class="explain">${FS_OK ? 'Choisissez un dossier (idéalement dédié) : les parties y seront écrites automatiquement.' : 'Ce navigateur ne peut pas écrire dans un dossier : les documents restent dans l’app, à télécharger en .zip (même structure) ou partie par partie.'}</p>`;
+  else if (!root) sp += `<p class="explain">${FS_OK ? 'Choisis un dossier (idéalement dédié) : les parties y seront écrites automatiquement.' : 'Ce navigateur ne peut pas écrire dans un dossier : tes enregistrements restent dans l’app, et tu peux les exporter en .zip.'}</p>`;
   $('#storePane').innerHTML = sp;
-  $('#recent').innerHTML = '';
 }
 
+/* ---------- Onglet Écoute : pendant l'écoute, seul le résumé qui se construit ---------- */
+function partSummaryHTML(doc, i, open = false) {
+  const p = doc.parts[i], w = writeupOf(p), n = partNo(doc, i);
+  const end = p.end || p.start, time = `${fmtT(p.start)} – ${fmtT(end)}`;
+  if (p.status === 'summarizing') return `<article class="bpart wait"><div class="bnum">${n}</div><div class="grow"><div class="bmeta">${time}</div><h3>${esc(p.label || p.title || 'Sujet ' + n)}</h3><p class="muted bline"><span class="spin"></span>Rédaction du résumé…</p></div></article>`;
+  if (!w) return `<article class="bpart"><div class="bnum">${n}</div><div class="grow"><div class="bmeta">${time}</div><h3>${esc(p.title || p.label || 'Sujet ' + n)}</h3><p class="muted bline">${hasKey() ? 'Résumé non rédigé' + (p.writeupError ? ' (' + esc(p.writeupError) + ')' : '') + ' : il pourra être relancé depuis l’enregistrement.' : 'Transcription seulement (pas de clé API).'}</p></div></article>`;
+  return `<article class="bpart"><div class="bnum">${n}</div><div class="grow"><div class="bmeta">${time}</div><h3>${esc(w.titre || p.title)}</h3>
+    ${w.chapeau ? `<p class="bchapo">${esc(w.chapeau)}</p>` : ''}
+    ${w.a_retenir.length ? `<ul class="bpts">${w.a_retenir.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+    ${w.compte_rendu.length ? `<details class="blk" ${open ? 'open' : ''}><summary>Lire le compte rendu</summary>${w.compte_rendu.map(x => `<p class="para">${esc(x)}</p>`).join('')}</details>` : ''}</div></article>`;
+}
+function renderLive() {
+  if (view.name !== 'listen') { renderMini(); renderTabs(); return; }
+  const doc = live ? live.doc : finalizing && finalizing.doc;
+  if (!doc) return;
+  const cat = catById(doc.cat), type = TYPES[docType(doc)];
+  $('#topTitle').innerHTML = `<span class="dot" style="--c:${cat.color}"></span><span>${esc(cat.name)}</span>`;
+  // en-tête
+  $('#lhState').innerHTML = live ? `<span class="pulse"></span><b>Écoute en cours</b><span class="lclock" id="liveClock2">${fmtClock(Date.now() - live.start)}</span>`
+    : `<span class="spin"></span><b>Finalisation de l'enregistrement…</b>`;
+  $('#lhSub').textContent = `${doc.source ? doc.source + ' · ' : ''}${cat.name} · ${type.label}`;
+  $('#lhActs').hidden = !live;
+  let warn = '';
+  if (live && !hasKey()) warn = `<div class="keywarn" style="margin:12px 0 0">${IC.edit}<div class="grow">Sans clé API, seule la transcription est gardée : pas de résumé.</div><button class="btn sm primary" data-act="settings">Ajouter</button></div>`;
+  else if (live && live.lastError) warn = `<p class="lwarn">Prise de notes perturbée (${esc(live.lastError)}) : le texte est conservé, l'app réessaie.</p>`;
+  $('#lhWarn').innerHTML = warn;
+  // le résumé qui se construit
+  const idx = doc.parts.map((p, i) => i);
+  const openIdx = live ? doc.parts.length - 1 : -1;
+  let h = (doc.diskParts && doc.diskParts.length) ? `<p class="small muted" style="margin:0 4px 10px">Suite d'un enregistrement existant : les parties 1 à ${doc.diskParts.length} sont déjà sur le disque.</p>` : '';
+  h += idx.filter(i => i !== openIdx).map(i => partSummaryHTML(doc, i)).join('');
+  if (live) {
+    const p = doc.parts[openIdx], segs = realSegs(p.segments), n = partNo(doc, openIdx);
+    h += `<article class="bpart cur"><div class="bnum">${n}</div><div class="grow">
+      <div class="bmeta">${segs.length ? 'depuis ' + fmtT(segs[0].t) : 'en attente de parole'}</div>
+      <h3>${esc(p.label || (segs.length ? 'Sujet en cours…' : 'À l’écoute…'))}</h3>
+      <div class="listening"><span></span><span></span><span></span><span></span><span></span></div>
+      <p class="muted bline">${hasKey() ? 'Le résumé de ce sujet sera rédigé dès qu’il se termine.' : 'Transcription en cours.'}</p></div></article>`;
+  }
+  if (!h) h = `<p class="muted">Le résumé apparaîtra ici, sujet par sujet.</p>`;
+  $('#buildList').innerHTML = h;
+  $('#buildHint').textContent = live ? 'Chaque sujet est résumé dès qu’il se termine. À l’arrêt, l’app rédige la synthèse et ouvre l’enregistrement complet.' : 'Rédaction des derniers résumés et de la synthèse. L’enregistrement complet s’ouvrira automatiquement.';
+}
+
+/* ---------- Onglet Enregistrements : la bibliothèque ---------- */
 let recSearch = '';
 function renderRecs() {
   const f = view.id ? catById(view.id) : null;
-  $('#topTitle').innerHTML = f ? `<span class="dot" style="--c:${f.color}"></span><span>${esc(f.name)}</span>` : '<span>Enregistrements</span>';
-  const head = f
-    ? `<div class="cat-head"><span class="dot" style="--c:${f.color}"></span><div class="grow"><h1>${esc(f.name)}</h1><div class="small muted">${esc((TYPES[f.type] || TYPES.podcast).label)} · ${docsOf(f.id).length} document(s)</div></div>
-        <button class="icon-btn" data-act="editcat" aria-label="Modifier la catégorie">${IC.edit}</button>
-        <button class="btn primary" data-act="gohere" style="--accent:${f.color};color:#06120d">${IC.play}GO ici</button></div>`
-    : `<div class="cat-head"><div class="grow"><h1>Enregistrements</h1><div class="small muted">${docs.length} document(s) dans ${cats.length} catégories</div></div></div>`;
-  const chips = `<div class="cats"><a class="cat ${!f ? 'on' : ''}" style="--c:var(--accent)" href="#/enregistrements">Tous <span class="n">${docs.length}</span></a>${cats.map(c => { const n = docsOf(c.id).length;
-    return `<a class="cat ${f && f.id === c.id ? 'on' : ''}" style="--c:${c.color}" href="#/enregistrements/${encodeURIComponent(c.id)}"><span class="dot"></span>${esc(c.name)}${n ? ` <span class="n">${n}</span>` : ''}</a>`; }).join('')}</div>`;
-  $('#catView').innerHTML = head + chips + `<input class="search" id="recSearch" type="search" placeholder="Rechercher un titre, une source, un sujet…" value="${esc(recSearch)}" autocomplete="off"><div id="recList"></div>`;
+  lastRecFilter = view.id || null;
+  $('#topTitle').innerHTML = '<span>Enregistrements</span>';
+  const all = docs.length + cats.reduce((a, c) => a + diskOnly(c.id).length, 0);
+  $('#catView').innerHTML = `<div class="lib-head"><h1>Enregistrements</h1><span class="muted">${all}</span></div>
+    <input class="search" id="recSearch" type="search" placeholder="Rechercher" value="${esc(recSearch)}" autocomplete="off">
+    <div class="cats lib-cats"><a class="cat ${!f ? 'on' : ''}" style="--c:var(--text)" href="#/enregistrements">Tous</a>${cats.map(c => `<a class="cat ${f && f.id === c.id ? 'on' : ''}" style="--c:${c.color}" href="#/enregistrements/${encodeURIComponent(c.id)}"><span class="dot"></span>${esc(c.name)}</a>`).join('')}</div>
+    ${f ? `<div class="lib-cat"><span class="muted">${esc((TYPES[f.type] || TYPES.podcast).label)}</span><button class="linkbtn" data-act="editcat">Modifier la catégorie</button></div>` : ''}
+    <div id="recList"></div>`;
   renderRecList();
 }
-const dayLabel = t => { const d = new Date(t), today = new Date(); const k = x => x.toDateString(); const y = new Date(today); y.setDate(today.getDate() - 1);
-  return k(d) === k(today) ? "Aujourd'hui" : k(d) === k(y) ? 'Hier' : cap(fmtLong(t)); };
 function renderRecList() {
   const f = view.id ? catById(view.id) : null, q = norm(recSearch);
   let list = (f ? docsOf(f.id) : docs.slice()).sort((a, b) => (b.updated || b.created) - (a.updated || a.created));
-  if (q) list = list.filter(d => norm([docLabel(d), d.source || '', ...d.parts.map(p => p.title || p.label || '')].join(' ')).includes(q));
-  let h = '', lastDay = '';
-  for (const d of list) { const lbl = dayLabel(d.updated || d.created); if (lbl !== lastDay) { h += `<p class="h day">${esc(lbl)}</p>`; lastDay = lbl; } h += docCard(d); }
-  if (!list.length) h = `<div class="card empty">${q ? 'Aucun résultat.' : f ? 'Aucun document dans cette catégorie. Appuyez sur « GO ici » pour en créer un.' : 'Aucun enregistrement pour l’instant. Lancez une écoute depuis l’accueil.'}</div>`;
-  const disk = f ? diskOnly(f.id) : [];
-  if (disk.length) h += `<div class="sec-h"><p class="h">Sur le disque (${esc(rootName)} / ${esc(f.folder)})</p></div><div class="card"><div class="list" style="max-height:none;margin:0">${disk.map(d => `<div class="row">${IC.doc}<div class="grow"><div class="t">${esc(d.folder)}</div><div class="m">${d.parts.length} partie(s)</div></div>
-        <button class="btn sm" data-act="dindex" data-f="${esc(d.folder)}">${IC.list}Sommaire</button><button class="btn sm primary" data-act="dcont" data-f="${esc(d.folder)}">${IC.play}Continuer</button></div>`).join('')}</div></div>`;
+  if (q) list = list.filter(d => norm([displayTitle(d), d.source || '', ...d.parts.map(p => p.title || p.label || '')].join(' ')).includes(q));
+  let h = list.map(d => {
+    const c = catById(d.cat), st = docState(d), dur = docDur(d);
+    const snip = d.synthesis && d.synthesis.synthese[0] ? d.synthesis.synthese[0] : ((d.parts.find(p => p.writeup && p.writeup.chapeau) || {}).writeup || {}).chapeau || '';
+    return `<button class="rrow" data-open="${d.id}" style="--c:${c.color}">
+      <span class="rbar"></span>
+      <div class="grow">
+        <div class="rt">${esc(displayTitle(d))}</div>
+        <div class="rm">${!f ? `<span class="dot"></span>${esc(c.name)} · ` : ''}${relDate(d.updated || d.created)}${dur > 60000 ? ' · ' + fmtDur(dur) : ''} · ${plural(nParts(d), 'partie')}</div>
+        ${d.source ? `<div class="rsrc">${esc(d.source)}</div>` : ''}
+        ${snip ? `<div class="rs">${esc(snip)}</div>` : ''}
+        ${st ? `<div class="rstate ${st[0]}">${st[0] === 'busy' ? '<span class="spin"></span>' : ''}${esc(st[1])}</div>` : ''}
+      </div>
+      <svg class="chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>`;
+  }).join('');
+  const disk = (f ? [f] : cats).flatMap(c => diskOnly(c.id).map(d => ({...d, cat: c})))
+    .filter(d => !q || norm(d.folder).includes(q));
+  if (disk.length) h += `<p class="h" style="margin:22px 4px 8px">Sur le disque</p>` + disk.map(d => `<button class="rrow" data-disk="${esc(d.folder)}" data-c="${d.cat.id}" style="--c:${d.cat.color}"><span class="rbar"></span>
+      <div class="grow"><div class="rt">${esc(d.folder)}</div><div class="rm">${!f ? `<span class="dot"></span>${esc(d.cat.name)} · ` : ''}${plural(d.parts.length, 'partie')} · trouvé dans ${esc(rootName)}</div></div>
+      <svg class="chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>`).join('');
+  if (!h) h = `<div class="lib-empty">${q ? 'Aucun enregistrement ne correspond à ta recherche.' : `<b>Aucun enregistrement${f ? ' dans ' + esc(f.name) : ''}.</b><br>Lance une écoute depuis l'onglet Écoute : le résumé apparaîtra ici une fois terminé.`}</div>`;
   $('#recList').innerHTML = h;
 }
 
-function renderLive() {
-  if (!live) return;
-  if (view.name !== 'direct') { renderMini(); renderTabs(); return; }
-  const doc = live.doc, part = curPart(), segs = realSegs(part.segments), cat = catById(doc.cat);
-  $('#nowKicker').innerHTML = `<span class="num">${partNo(doc, doc.parts.length - 1)}</span><span>${esc(docLabel(doc))}</span><span>·</span><span>${segs.length ? 'partie en cours depuis ' + fmtT(segs[0].t) : 'en attente de parole'}</span>`;
-  $('#nowTitle').textContent = part.label || liveTitle(segs) || (segs.length ? trunc(segs[0].text, 60) : "À l'écoute…");
-  // notes propres
-  const nb = $('#notesBox'), atB = nb.scrollHeight - nb.scrollTop - nb.clientHeight < 40;
-  if (hasKey()) {
-    const items = [...part.notes.map(n => ({t: n.t, text: n.text, k: 'n'})), ...part.quotes.map(q => ({t: q.t, text: `« ${q.texte} »${q.auteur ? ' — ' + q.auteur : ''}`, k: 'q'})),
-      ...part.clean.filter(c => c.raw).map(c => ({t: c.t, text: c.text, k: 'r'}))].sort((a, b) => a.t - b.t);
-    nb.innerHTML = items.length ? items.slice(-80).map(x => `<div class="note ${x.k}"><time>${fmtT(x.t)}</time><p>${x.k === 'r' ? '<span class="tag">texte brut</span> ' : ''}${esc(x.text)}</p></div>`).join('')
-      : `<p class="muted small" style="margin:0">Les notes au propre apparaîtront ici environ toutes les ${S.chunkSec || 60} secondes, au fil de l'écoute.</p>`;
-  } else nb.innerHTML = `<div class="keywarn" style="margin:0">${IC.edit}<div class="grow">Sans clé API, l'app garde seulement la transcription.</div><button class="btn sm primary" data-act="settings">Ajouter une clé</button></div>`;
-  if (atB) nb.scrollTop = nb.scrollHeight;
-  // transcription en direct : ce qui n'est pas encore mis au propre (ou tout, sans clé)
-  let items = (hasKey() ? live.buf : segs).map(s => ({...s, k: 'ok'}));
-  if (S.showRejected) items = items.concat(doc.rejected.filter(r => r.t >= (items[0] ? items[0].t : part.start)).map(r => ({...r, k: 'rej'})));
-  items.sort((a, b) => a.t - b.t);
-  const box = $('#lines'), atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 40;
-  box.innerHTML = items.slice(-30).map(s => `<div class="ln ${s.k === 'rej' ? 'rej' : ''}"><time>${fmtT(s.t)}</time><p>${esc(s.text)}${s.k === 'rej' ? ` <em>· ${esc(s.reason)}</em>` : ''}</p></div>`).join('')
-    || `<p class="muted small" style="margin:0">${hasKey() && segs.length ? 'Tout ce qui a été dit est déjà passé dans les notes.' : 'Les phrases reconnues apparaissent ici.'}</p>`;
-  if (atBottom) box.scrollTop = box.scrollHeight;
-  noteStatus();
-  $('#meterCard').hidden = !analyser;
-  const doneIdx = doc.parts.map((p, i) => i).slice(0, -1);
-  $('#liveTopicsCard').hidden = !doneIdx.length;
-  $('#liveTopics').innerHTML = doneIdx.map(i => partRow(doc, i)).join('');
-  $('#topTitle').innerHTML = `<span class="dot" style="--c:${cat.color}"></span><span>${esc(cat.name)}</span>`;
-}
-function noteStatus() {
-  if (!live) return;
-  const el = $('#noteStatus');
-  if (!hasKey()) { el.textContent = ''; return; }
-  if (live.stopping) el.innerHTML = '<span class="spin"></span>Arrêt : derniers mots et rédaction…';
-  else if (live.busy) el.innerHTML = '<span class="spin"></span>Mise au propre des notes…';
-  else if (live.buf.length) { const left = Math.max(0, Math.round(((S.chunkSec || 60) * 1000 - (Date.now() - live.buf[0].t)) / 1000)); el.textContent = `${bufWords()} mots en attente · prochaines notes dans ~${left} s`; }
-  else if (live.lastError) el.innerHTML = `<span style="color:var(--warn)">Dernière mise au propre impossible (${esc(live.lastError)}) : le texte brut est gardé.</span>`;
-  else el.textContent = live.lastNotes ? `Notes à jour (${fmtT(live.lastNotes)})` : 'En attente de parole…';
-}
-
-/* Dialogue d'une partie */
-let dlgCtx = null;
-function writeupHTML(w, p) {
+/* ---------- Page d'un enregistrement : le document final ---------- */
+function writeupHTML(w, p, withChapo = true) {
   const L = (t, a) => a && a.length ? `<h4>${t}</h4><ul>${a.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : '';
   const quotes = w.citations.length ? w.citations : (p.quotes || []), refs = w.references.length ? w.references : (p.refs || []);
-  return `<div class="sum">${w.chapeau ? `<p class="chapo">${esc(w.chapeau)}</p>` : ''}
-    ${w.compte_rendu.length ? `<h4>Compte rendu</h4>${w.compte_rendu.map(x => `<p class="para">${esc(x)}</p>`).join('')}` : ''}
+  return `<div class="sum">${withChapo && w.chapeau ? `<p class="chapo">${esc(w.chapeau)}</p>` : ''}
+    ${w.compte_rendu.map(x => `<p class="para">${esc(x)}</p>`).join('')}
     ${L('À retenir', w.a_retenir)}${L('Décisions', w.decisions)}
     ${w.actions.length ? `<h4>Actions</h4><div class="tblw"><table class="tbl"><tr><th>Qui</th><th>Quoi</th><th>Quand</th></tr>${w.actions.map(a => `<tr><td>${esc(a.qui || '—')}</td><td>${esc(a.quoi)}</td><td>${esc(a.quand || '—')}</td></tr>`).join('')}</table></div>` : ''}
     ${w.definitions.length ? `<h4>Définitions</h4><ul>${w.definitions.map(d => `<li><b>${esc(d.terme)}</b> : ${esc(d.definition)}</li>`).join('')}</ul>` : ''}
     ${quotes.length ? `<h4>Citations</h4>${quotes.map(q => `<blockquote>« ${esc(q.texte)} »${q.auteur ? ` <span class="muted">— ${esc(q.auteur)}</span>` : ''}</blockquote>`).join('')}` : ''}
     ${refs.length ? `<h4>Références citées</h4><div class="tblw"><table class="tbl"><tr><th>Référence</th><th>Type</th><th>Contexte</th></tr>${refs.map(f => `<tr><td>${esc(f.nom)}</td><td>${esc(f.type || '—')}</td><td>${esc(f.contexte || '—')}</td></tr>`).join('')}</table></div>` : ''}
-    ${L('Questions et pistes', w.questions)}
-    ${w.mots_cles.length ? `<h4>Mots-clés</h4><div class="kw">${w.mots_cles.map(k => `<span>${esc(k)}</span>`).join('')}</div>` : ''}</div>`;
+    ${L('Questions et pistes', w.questions)}</div>`;
 }
-function openPart(doc, i) {
-  const p = doc.parts[i]; if (!p) return;
-  const n = partNo(doc, i), w = writeupOf(p), segs = realSegs(p.segments);
-  dlgCtx = {doc, i};
-  $('#dtTitle').textContent = `${n}. ${(w && w.titre) || p.title || p.label || 'Partie ' + n}`;
-  const end = p.end || (segs.length ? segs[segs.length - 1].t : p.start);
-  let h = `<p class="small muted" style="margin:0 0 14px">${esc(catById(doc.cat).name)} › ${esc(docLabel(doc))} · ${fmtT(p.start)} → ${fmtT(end)}${p.status === 'saved' ? '<br>Fichier : ' + esc(doc.folder + '/' + p.savedAs) : ''}${p.status === 'open' ? ' · partie en cours' : ''}</p>`;
-  if (w) h += writeupHTML(w, p);
-  else if (p.status === 'summarizing') h += '<p class="muted">Rédaction du compte rendu en cours…</p>';
-  else if (p.status === 'open') h += '<p class="muted">Le compte rendu sera rédigé à la fin de cette partie. Voici les notes prises jusqu’ici.</p>';
-  else h += `<p class="muted">Compte rendu pas encore rédigé${p.writeupError ? ' (' + esc(p.writeupError) + ')' : ''}.</p>`;
-  if (p.notes.length) h += `<details class="blk" ${!w ? 'open' : ''}><summary>Notes prises pendant l'écoute (${p.notes.length})</summary><div class="notes">${p.notes.map(x => `<div class="note"><time>${fmtT(x.t)}</time><p>${esc(x.text)}</p></div>`).join('')}</div></details>`;
-  const tr = p.clean.length ? p.clean : segs;
-  if (tr.length) h += `<details class="blk" ${!w && !p.notes.length ? 'open' : ''}><summary>Transcription (${tr.length})</summary><div class="lines" style="max-height:none">${tr.map(s => `<div class="ln"><time>${fmtT(s.t)}</time><p>${esc(s.text)}</p></div>`).join('')}</div></details>`;
-  $('#dtBody').innerHTML = h;
-  const canWrite = hasKey() && p.status !== 'open' && p.status !== 'summarizing' && partHasContent(p);
-  $('#dtFoot').innerHTML = `<button class="btn" data-x="copy">${IC.copy}Copier</button><button class="btn" data-x="dl">${IC.dl}Télécharger</button>${navigator.canShare ? `<button class="btn" data-x="share">${IC.share}Partager</button>` : ''}`
-    + (canWrite ? `<span class="grow"></span><button class="btn ${w ? '' : 'primary'}" data-x="rewrite">${IC.edit}${w ? 'Rédiger à nouveau' : 'Rédiger le compte rendu'}</button>` : '');
-  if (!$('#dlgTopic').open) $('#dlgTopic').showModal();
+function renderDoc() {
+  const doc = docs.find(d => String(d.id) === String(view.id));
+  $('#topTitle').innerHTML = '<span>Enregistrement</span>';
+  if (!doc) { $('#reader').innerHTML = `<a class="back" href="#/enregistrements">‹ Enregistrements</a><div class="lib-empty">Cet enregistrement n'existe plus dans l'app.</div>`; return; }
+  const cat = catById(doc.cat), type = TYPES[docType(doc)], syn = doc.synthesis, dur = docDur(doc), st = docState(doc);
+  const isLive = live && live.doc === doc;
+  const kw = [...new Set(doc.parts.flatMap(p => { const w = writeupOf(p); return w ? w.mots_cles.slice(0, 3) : []; }))].slice(0, 10);
+  const shown = doc.parts.map((p, i) => i).filter(i => partHasContent(doc.parts[i]) && !(isLive && i === doc.parts.length - 1));
+  let h = `<a class="back" href="#/enregistrements${lastRecFilter ? '/' + encodeURIComponent(lastRecFilter) : ''}">‹ Enregistrements</a>
+  <header class="rd-head" style="--c:${cat.color}">
+    <div class="rd-cat"><span class="dot"></span>${esc(cat.name)} · ${esc(type.label)}</div>
+    <h1>${esc(displayTitle(doc))}</h1>
+    <div class="rd-meta">${doc.source ? `<b>${esc(doc.source)}</b><br>` : ''}${cap(fmtLong(doc.created))}${dur > 60000 ? ' · ' + fmtDur(dur) : ''} · ${plural(nParts(doc), 'partie')}</div>
+    ${st ? `<div class="rstate ${st[0]}" style="margin-top:10px">${st[0] === 'busy' ? '<span class="spin"></span>' : ''}${esc(st[1])}${st[0] === 'warn' ? ` <button class="linkbtn" data-act="writeall">Rédiger maintenant</button>` : ''}</div>` : ''}
+    <div class="rd-acts">${isLive ? `<a class="btn primary" href="#/" style="--accent:var(--danger);color:#fff">● Voir l'écoute en cours</a>` : `<button class="btn primary" data-act="cont">${IC.play}Continuer l'écoute</button>`}<button class="btn" data-act="zip">${IC.dl}Exporter</button></div>
+  </header>`;
+  if (syn && (syn.synthese.length || syn.a_retenir.length)) h += `<section class="rd-sec"><h2>Synthèse</h2>${syn.synthese.map(x => `<p class="para">${esc(x)}</p>`).join('')}
+    ${syn.a_retenir.length ? `<div class="rd-key"><h4>À retenir</h4><ul>${syn.a_retenir.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>` : ''}</section>`;
+  if (shown.length > 1 || (doc.diskParts && doc.diskParts.length)) h += `<section class="rd-sec rd-toc"><h2>Sommaire</h2><ol>
+    ${(doc.diskParts || []).map((f, i) => `<li><span class="tn">${i + 1}</span><span class="grow">${esc(f.replace(/^\d+\s-\s/, '').replace(/\.md$/, ''))}</span><span class="muted small">sur le disque</span></li>`).join('')}
+    ${shown.map(i => { const p = doc.parts[i], w = writeupOf(p); return `<li><button data-scroll="${i}"><span class="tn">${partNo(doc, i)}</span><span class="grow">${esc((w && w.titre) || p.title || p.label || 'Partie')}</span><span class="muted small">${fmtT(p.start)}</span></button></li>`; }).join('')}</ol></section>`;
+  h += shown.map(i => {
+    const p = doc.parts[i], w = writeupOf(p), n = partNo(doc, i), end = p.end || p.start, tr = p.clean.length ? p.clean : realSegs(p.segments);
+    return `<section class="rd-sec rd-part" id="rd-part-${i}">
+      <div class="rd-pnum">Partie ${n} · ${fmtT(p.start)} – ${fmtT(end)}</div>
+      <h2>${esc((w && w.titre) || p.title || p.label || 'Partie ' + n)}</h2>
+      ${w ? writeupHTML(w, p) : p.status === 'summarizing' ? '<p class="muted"><span class="spin"></span> Rédaction du résumé…</p>'
+        : `<p class="muted">${hasKey() ? 'Résumé non rédigé' + (p.writeupError ? ' (' + esc(p.writeupError) + ')' : '') + '.' : 'Pas de résumé : ajoute une clé API Anthropic dans les réglages pour le rédiger.'}</p>`}
+      ${(p.notes.length || tr.length) ? `<details class="blk"><summary>Notes et transcription</summary>
+        ${p.notes.length ? `<h4>Notes prises pendant l'écoute</h4><div class="notes">${p.notes.map(x => `<div class="note"><time>${fmtT(x.t)}</time><p>${esc(x.text)}</p></div>`).join('')}</div>` : ''}
+        ${tr.length ? `<h4>Transcription</h4><div class="lines" style="max-height:none">${tr.map(s => `<div class="ln"><time>${fmtT(s.t)}</time><p>${esc(s.text)}</p></div>`).join('')}</div>` : ''}</details>` : ''}
+      <div class="rd-pacts"><button class="linkbtn" data-act="pcopy" data-p="${i}">Copier</button><button class="linkbtn" data-act="pdl" data-p="${i}">Télécharger (.md)</button>${navigator.canShare ? `<button class="linkbtn" data-act="pshare" data-p="${i}">Partager</button>` : ''}${hasKey() && p.status !== 'summarizing' && p.status !== 'open' ? `<button class="linkbtn" data-act="prewrite" data-p="${i}">${w ? 'Rédiger à nouveau' : 'Rédiger'}</button>` : ''}</div>
+    </section>`;
+  }).join('');
+  if (!shown.length && !isLive) h += `<div class="lib-empty">Cet enregistrement ne contient encore aucune partie.</div>`;
+  if (kw.length) h += `<div class="kw" style="margin:6px 4px 18px">${kw.map(k => `<span>${esc(k)}</span>`).join('')}</div>`;
+  h += `<footer class="rd-foot">${doc.folder && rootOK ? `<p class="small muted">${IC.disk} Fichiers : ${esc(rootName)} / ${esc(cat.folder)} / ${esc(doc.folder)}</p>` : `<p class="small muted">Stocké dans l'app. « Exporter » télécharge un .zip avec le sommaire et une fiche par partie.</p>`}
+    ${isLive ? '' : `<button class="btn ghost danger" data-act="del">Retirer de l'app</button>`}</footer>`;
+  $('#reader').innerHTML = h;
 }
+
+/* ---------- Dialogues et exports ---------- */
+let dlgCtx = null;
+function openPart(doc, i) { location.hash = '#/doc/' + doc.id; setTimeout(() => { const el = $('#rd-part-' + i); if (el) el.scrollIntoView({behavior:'smooth', block:'start'}); }, 80); }
 function preview(title, text, foot = '') {
   $('#dpTitle').textContent = title;
   $('#dpBody').textContent = text.length > 40000 ? text.slice(0, 40000) + '\n\n… (aperçu tronqué)' : (text || '(vide)');
@@ -1645,7 +1716,7 @@ async function previewDisk(catId, folder) {
   let text = '';
   try { text = await (await (await d.handle.getFileHandle(SOMMAIRE)).getFile()).text(); }
   catch { text = 'Pas de sommaire. Parties présentes :\n\n' + d.parts.join('\n'); }
-  preview(folder, text, `<button class="btn primary" data-x="dcont" data-c="${catId}" data-f="${esc(folder)}">${IC.play}Continuer ce document</button>`);
+  preview(folder, text, `<button class="btn primary" data-x="dcont" data-c="${catId}" data-f="${esc(folder)}">${IC.play}Continuer cet enregistrement</button>`);
 }
 function docFiles(doc) {
   const cat = catById(doc.cat), base = `${cat.folder}/${doc.folder || folderNameFor(doc.created)}/`;
@@ -1741,7 +1812,8 @@ requestAnimationFrame(draw);
 setInterval(() => {
   if (!live) return;
   const clk = fmtClock(Date.now() - live.start);
-  $('#liveClock').textContent = clk; $('#miniClock').textContent = clk; $('#tabDirectLbl').textContent = clk;
+  $('#liveClock').textContent = clk; $('#miniClock').textContent = clk; $('#tabListenLbl').textContent = clk;
+  const c2 = $('#liveClock2'); if (c2) c2.textContent = clk;
   if (document.hidden) return;
   const map = {voice:['Voix','voice'], noise:['Bruit ignoré','noise'], silence:['Silence',''], off:['Inactif','']};
   const [txt, cls] = map[analyser ? curLabel : 'off'], b = $('#vadBadge'); b.textContent = txt; b.className = 'vad ' + cls;
@@ -1807,15 +1879,12 @@ $('#btnNewTopic').addEventListener('click', () => {
   if (!realSegs(curPart().segments).length) { toast('La partie en cours est encore vide.'); return; }
   startNewPart(Date.now(), 'manual'); saveSoon();
 });
-$('#btnPeek').addEventListener('click', () => live && openPart(live.doc, live.doc.parts.length - 1));
 document.addEventListener('click', e => {
   if (e.target.closest('[data-act=settings]')) { closeNav(); $('#dlgSettings').showModal(); }
-  if (e.target.closest('[data-act=startdirect]')) go();
 });
 $('#miniStop').addEventListener('click', e => { e.stopPropagation(); stopLive(); });
-$('#miniLive').addEventListener('click', () => { location.hash = '#/direct'; });
-$('#livePill').addEventListener('click', () => { if (live) location.hash = '#/direct'; });
-$('#liveOff').addEventListener('click', onDocAction);
+$('#miniLive').addEventListener('click', () => { location.hash = '#/'; });
+$('#livePill').addEventListener('click', () => { if (live) location.hash = '#/'; });
 $('#catView').addEventListener('input', e => { if (e.target.id === 'recSearch') { recSearch = e.target.value; renderRecList(); } });
 $('#docPane').addEventListener('input', e => { if (e.target.id === 'srcInput') { S.nextSource = e.target.value; saveSettings(); } });
 $('#btnSettings').addEventListener('click', () => $('#dlgSettings').showModal());
@@ -1874,9 +1943,30 @@ async function onDocAction(e) {
   const li = e.target.closest('.topic[data-d]');
   if (li) { const doc = docs.find(d => String(d.id) === li.dataset.d); if (doc) openPart(doc, +li.dataset.p); }
 }
-$('#catView').addEventListener('click', onDocAction);
+$('#catView').addEventListener('click', e => {
+  const o = e.target.closest('[data-open]'); if (o) { location.hash = '#/doc/' + o.dataset.open; return; }
+  const d = e.target.closest('[data-disk]'); if (d) { previewDisk(d.dataset.c, d.dataset.disk); return; }
+  if (e.target.closest('[data-act=editcat]') && view.id) openCatDialog(view.id);
+});
+$('#reader').addEventListener('click', async e => {
+  const sc = e.target.closest('[data-scroll]');
+  if (sc) { const el = $('#rd-part-' + sc.dataset.scroll); if (el) el.scrollIntoView({behavior: 'smooth', block: 'start'}); return; }
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const doc = docs.find(d => String(d.id) === String(view.id)); if (!doc) return;
+  const act = b.dataset.act, i = +b.dataset.p, p = doc.parts[i];
+  if (act === 'cont') { S.curCat = doc.cat; S.docMode = 'continue'; S.continueKey = String(doc.id); saveSettings(); return go(doc.cat, String(doc.id)); }
+  if (act === 'zip') return download(makeZip(docFiles(doc)), `${safeName(catById(doc.cat).folder)} - ${doc.folder || folderNameFor(doc.created)}.zip`);
+  if (act === 'del') { if (confirm('Retirer cet enregistrement de l’app ? Les fichiers déjà écrits sur le disque sont conservés.')) { docs.splice(docs.indexOf(doc), 1); saveNow(); location.hash = '#/enregistrements'; } return; }
+  if (act === 'writeall') { b.disabled = true; for (const q of doc.parts) if (!writeupOf(q) && partHasContent(q) && q.status !== 'open' && q.status !== 'summarizing') await rewritePart(doc, q); return; }
+  if (!p) return;
+  if (!p.title) p.title = p.label || liveTitle(realSegs(p.segments)) || 'Partie';
+  const text = partMD(doc, i), name = p.savedAs || partFile(doc, i);
+  if (act === 'pdl') download(mdBlob(text), name);
+  if (act === 'pshare') shareFile(text, name);
+  if (act === 'pcopy') (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(() => toast('Partie copiée.'), () => toast('Copie impossible ici.', 'warn'));
+  if (act === 'prewrite') { b.disabled = true; b.textContent = 'Rédaction…'; await rewritePart(doc, p); }
+});
 $('#recent').addEventListener('click', onDocAction);
-$('#liveTopics').addEventListener('click', onDocAction);
 $('#dpFoot').addEventListener('click', e => {
   const b = e.target.closest('[data-x=dcont]'); if (!b) return;
   $('#dlgPreview').close(); S.curCat = b.dataset.c; saveSettings(); go(b.dataset.c, 'disk:' + b.dataset.f);
