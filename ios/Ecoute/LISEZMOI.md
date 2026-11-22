@@ -22,7 +22,13 @@ puis prend des notes, découpe par sujet et rédige un compte rendu par partie a
    identifiant de lot = celui de l'étape 3, SKU = `ecoute1`. Accès complet.
 5. Sur l'iPhone, installe l'app **TestFlight** depuis l'App Store.
 
-### Envoyer une version
+### Envoyer une version (le plus simple)
+
+Dans le Finder, ouvre le dossier `ios/Ecoute` et double-clique sur **Envoyer sur TestFlight.command**.
+Une fenêtre s'ouvre, archive l'app puis l'envoie. Le numéro de build se met tout seul.
+La première fois, si macOS bloque le fichier : clic droit › **Ouvrir** › **Ouvrir**.
+
+### Envoyer une version depuis Xcode
 
 1. En haut de Xcode, choisis la destination **Any iOS Device (arm64)**.
 2. Menu **Product › Archive**. Attends la fin (quelques minutes la première fois).
