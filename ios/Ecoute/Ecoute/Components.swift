@@ -78,75 +78,149 @@ struct SectionLabel: View {
     }
 }
 
-/// Le compte rendu d'une partie.
+/// Liste à puces simple.
+struct BulletList: View {
+    let items: [String]
+    var font: Font = .body
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            ForEach(Array(items.enumerated()), id: \.offset) { _, x in
+                HStack(alignment: .firstTextBaseline, spacing: 10) {
+                    Circle().fill(Color.secondary.opacity(0.6)).frame(width: 5, height: 5).alignmentGuide(.firstTextBaseline) { $0[.bottom] + 3 }
+                    Text(x).font(font).fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
+    }
+}
+
+/// Encadré des points essentiels.
+struct KeyPointsCard: View {
+    var title = "À retenir"
+    let items: [String]
+    var color: Color = .accentColor
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label(title, systemImage: "star.fill").font(.subheadline.weight(.semibold)).foregroundStyle(color)
+            BulletList(items: items)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(color.opacity(0.10), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+    }
+}
+
+/// La fiche d'une partie : chapeau, essentiel, sections avec intertitres, puis les rubriques.
 struct WriteupView: View {
     let writeup: Writeup
     let part: Part
     var showChapo = true
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 20) {
             if showChapo, !writeup.chapeau.isEmpty {
-                Text(writeup.chapeau).font(.body.weight(.semibold))
+                Text(writeup.chapeau).font(.title3.weight(.medium)).fixedSize(horizontal: false, vertical: true)
             }
-            ForEach(Array(writeup.compteRendu.enumerated()), id: \.offset) { _, para in
-                Text(para).font(.body).lineSpacing(4)
-            }
-            bullets("À retenir", writeup.aRetenir)
-            bullets("Décisions", writeup.decisions)
-            if !writeup.actions.isEmpty {
-                VStack(alignment: .leading, spacing: 6) {
-                    SectionLabel(text: "Actions")
-                    ForEach(Array(writeup.actions.enumerated()), id: \.offset) { _, a in
-                        let extra = [a.qui, a.quand].filter { !$0.isEmpty }.joined(separator: " · ")
-                        Text("• \(a.quoi)") + Text(extra.isEmpty ? "" : " — \(extra)").foregroundColor(.secondary)
+            if !writeup.aRetenir.isEmpty { KeyPointsCard(items: writeup.aRetenir) }
+            if !writeup.shownSections.isEmpty {
+                ForEach(Array(writeup.shownSections.enumerated()), id: \.offset) { _, s in
+                    VStack(alignment: .leading, spacing: 6) {
+                        if !s.intertitre.isEmpty { Text(s.intertitre).font(.headline) }
+                        Text(s.texte).font(.body).lineSpacing(4).fixedSize(horizontal: false, vertical: true)
                     }
+                }
+            } else {
+                ForEach(Array(writeup.compteRendu.enumerated()), id: \.offset) { _, para in
+                    Text(para).font(.body).lineSpacing(4)
+                }
+            }
+            rubric("Décisions", writeup.decisions)
+            if !writeup.actions.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    SectionLabel(text: "Actions")
+                    ForEach(Array(writeup.actions.enumerated()), id: \.offset) { _, a in ActionRow(action: a) }
                 }
             }
             if !writeup.definitions.isEmpty {
-                VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: 8) {
                     SectionLabel(text: "Définitions")
-                    ForEach(Array(writeup.definitions.enumerated()), id: \.offset) { _, d in
-                        (Text(d.terme).bold() + Text(" : \(d.definition)"))
-                    }
+                    ForEach(Array(writeup.definitions.enumerated()), id: \.offset) { _, d in DefinitionRow(def: d) }
                 }
             }
             let quotes = writeup.citations.isEmpty ? part.quotes : writeup.citations
             if !quotes.isEmpty {
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: 10) {
                     SectionLabel(text: "Citations")
-                    ForEach(Array(quotes.enumerated()), id: \.offset) { _, q in
-                        HStack(alignment: .top, spacing: 10) {
-                            RoundedRectangle(cornerRadius: 2).fill(Color.accentColor).frame(width: 3)
-                            (Text("« \(q.texte) »").italic() + Text(q.auteur.isEmpty ? "" : " — \(q.auteur)").foregroundColor(.secondary))
-                        }
-                    }
+                    ForEach(Array(quotes.enumerated()), id: \.offset) { _, q in QuoteRow(quote: q) }
                 }
             }
             let refs = writeup.references.isEmpty ? part.refs : writeup.references
             if !refs.isEmpty {
-                VStack(alignment: .leading, spacing: 6) {
-                    SectionLabel(text: "Références citées")
-                    ForEach(Array(refs.enumerated()), id: \.offset) { _, r in
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text(r.nom).font(.subheadline.weight(.semibold)) + Text(r.type.isEmpty ? "" : "  \(r.type)").font(.caption).foregroundColor(.secondary)
-                            if !r.contexte.isEmpty { Text(r.contexte).font(.footnote).foregroundStyle(.secondary) }
-                        }
-                    }
+                VStack(alignment: .leading, spacing: 8) {
+                    SectionLabel(text: "Références")
+                    ForEach(Array(refs.enumerated()), id: \.offset) { _, r in ReferenceRow(ref: r) }
                 }
             }
-            bullets("Questions et pistes", writeup.questions)
+            rubric("Pour aller plus loin", writeup.questions)
         }
     }
 
     @ViewBuilder
-    private func bullets(_ title: String, _ items: [String]) -> some View {
+    private func rubric(_ title: String, _ items: [String]) -> some View {
         if !items.isEmpty {
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 8) {
                 SectionLabel(text: title)
-                ForEach(Array(items.enumerated()), id: \.offset) { _, x in
-                    HStack(alignment: .firstTextBaseline, spacing: 8) { Text("•"); Text(x) }
-                }
+                BulletList(items: items)
+            }
+        }
+    }
+}
+
+struct QuoteRow: View {
+    let quote: Quote
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            RoundedRectangle(cornerRadius: 2).fill(Color.accentColor).frame(width: 3)
+            VStack(alignment: .leading, spacing: 4) {
+                Text("« \(quote.texte) »").italic().fixedSize(horizontal: false, vertical: true)
+                if !quote.auteur.isEmpty { Text(quote.auteur).font(.footnote).foregroundStyle(.secondary) }
+            }
+        }
+    }
+}
+
+struct ReferenceRow: View {
+    let ref: Reference
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: 6) {
+                Text(ref.nom).font(.subheadline.weight(.semibold))
+                if !ref.type.isEmpty { Text(ref.type).font(.caption).foregroundStyle(.secondary) }
+            }
+            if !ref.contexte.isEmpty { Text(ref.contexte).font(.footnote).foregroundStyle(.secondary) }
+        }
+    }
+}
+
+struct DefinitionRow: View {
+    let def: Definition
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(def.terme).font(.subheadline.weight(.semibold))
+            Text(def.definition).font(.subheadline).foregroundStyle(.secondary)
+        }
+    }
+}
+
+struct ActionRow: View {
+    let action: ActionItem
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 10) {
+            Image(systemName: "circle").font(.caption).foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(action.quoi)
+                let extra = [action.qui, action.quand].filter { !$0.isEmpty }.joined(separator: " · ")
+                if !extra.isEmpty { Text(extra).font(.footnote).foregroundStyle(.secondary) }
             }
         }
     }

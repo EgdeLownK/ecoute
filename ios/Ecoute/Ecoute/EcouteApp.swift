@@ -2,10 +2,17 @@ import SwiftUI
 
 enum AppTab: Hashable { case listen, library }
 
+/// Les pages de la bibliothèque.
+enum LibRoute: Hashable {
+    case category(String)
+    case doc(UUID)
+    case part(UUID, UUID)   // enregistrement, partie
+}
+
 @MainActor
 final class AppNav: ObservableObject {
     @Published var tab: AppTab = .listen
-    @Published var libraryPath: [UUID] = []
+    @Published var libraryPath: [LibRoute] = []
 }
 
 @main
@@ -46,7 +53,7 @@ struct RootView: View {
                 .tabItem { Label("Écoute", systemImage: engine.isLive ? "record.circle.fill" : "mic") }
                 .tag(AppTab.listen)
             LibraryView()
-                .tabItem { Label("Enregistrements", systemImage: "list.bullet.rectangle") }
+                .tabItem { Label("Bibliothèque", systemImage: "books.vertical") }
                 .tag(AppTab.library)
         }
         .overlay(alignment: .bottom) {
@@ -59,7 +66,7 @@ struct RootView: View {
         .onChange(of: engine.finishedDocId) { _, id in
             guard let id else { return }
             nav.tab = .library
-            nav.libraryPath = [id]
+            nav.libraryPath = [.doc(id)]
             engine.finishedDocId = nil
         }
         .onChange(of: phase) { _, p in if p != .active { store.saveNow() } }

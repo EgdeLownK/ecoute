@@ -314,7 +314,7 @@ final class Engine: ObservableObject {
     private func synthesize(_ id: UUID) async {
         guard let d = store.doc(id), let prompt = Prompts.synthesis(doc: d) else { return }
         do {
-            let r = try await Claude.call(key: settings.key, model: settings.modelWrite, prompt: prompt, maxTokens: 2500)
+            let r = try await Claude.call(key: settings.key, model: settings.modelWrite, prompt: prompt, maxTokens: 3500)
             let s = Prompts.parseSynthesis(r)
             store.update(id) { d in
                 d.synthesis = s

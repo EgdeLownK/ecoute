@@ -5,15 +5,17 @@ struct ListenView: View {
     @EnvironmentObject var store: Store
     @EnvironmentObject var settings: Settings
     @EnvironmentObject var engine: Engine
-    @State private var continueMode = false
-    @State private var continueId: UUID?
     @State private var source = ""
     @State private var showSettings = false
+    @State private var showCategories = false
+    @State private var editingCat: Category?
+    @State private var creatingCat = false
+    @State private var deletingCat: Category?
 
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: 20) {
                     switch engine.state {
                     case .idle: idle
                     case .preparing: preparing
@@ -23,14 +25,27 @@ struct ListenView: View {
                 .padding(16)
                 .padding(.bottom, 30)
             }
+            .scrollDismissesKeyboard(.interactively)
             .background(Color(.systemGroupedBackground))
             .navigationTitle("Écoute")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { showSettings = true } label: { Image(systemName: "gearshape") }
+                        .accessibilityLabel("Réglages")
                 }
             }
             .sheet(isPresented: $showSettings) { SettingsView() }
+            .sheet(isPresented: $showCategories) { CategoriesSheet() }
+            .sheet(item: $editingCat) { c in CategoryEditor(original: c) }
+            .sheet(isPresented: $creatingCat) { CategoryEditor(original: nil) }
+            .confirmationDialog(deletingCat.map { "Supprimer « \($0.name) » ?" } ?? "",
+                                isPresented: Binding(get: { deletingCat != nil }, set: { if !$0 { deletingCat = nil } }),
+                                titleVisibility: .visible, presenting: deletingCat) { c in
+                Button("Supprimer", role: .destructive) { deleteCategory(c) }
+            } message: { c in
+                let n = store.docs(in: c.id).count
+                Text(n == 0 ? "La catégorie est vide." : "\(n) écoute\(n > 1 ? "s" : "") ser\(n > 1 ? "ont" : "a") retirée\(n > 1 ? "s" : "") de l'app.")
+            }
         }
     }
 
@@ -41,23 +56,41 @@ struct ListenView: View {
     @ViewBuilder private var idle: some View {
         categoryChips
         goButton
-        if !settings.hasKey { keyWarning }
-        recordingCard
-        backgroundCard
+        sourceField
+        if !settings.hasKey {
+            Button { showSettings = true } label: { Label("Ajouter ta clé API", systemImage: "key.fill").frame(maxWidth: .infinity) }
+                .buttonStyle(.bordered).tint(.orange).controlSize(.large)
+        }
+        resumeSection
     }
 
     private var categoryChips: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 ForEach(store.cats) { c in
-                    Button {
-                        settings.curCat = c.id
-                        continueId = nil
-                    } label: {
-                        CategoryChip(cat: c, selected: c.id == cat.id)
-                    }
-                    .buttonStyle(.plain)
+                    Button { settings.curCat = c.id } label: { CategoryChip(cat: c, selected: c.id == cat.id) }
+                        .buttonStyle(.plain)
+                        .contextMenu {
+                            Button { editingCat = c } label: { Label("Modifier", systemImage: "pencil") }
+                            if store.cats.count > 1 {
+                                Button(role: .destructive) { deletingCat = c } label: { Label("Supprimer", systemImage: "trash") }
+                            }
+                        }
                 }
+                Button { creatingCat = true } label: {
+                    Image(systemName: "plus").font(.subheadline.weight(.bold))
+                        .frame(width: 38, height: 38)
+                        .background(Color(.secondarySystemGroupedBackground), in: Circle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Ajouter une catégorie")
+                Button { showCategories = true } label: {
+                    Image(systemName: "slider.horizontal.3").font(.subheadline.weight(.semibold))
+                        .frame(width: 38, height: 38)
+                        .background(Color(.secondarySystemGroupedBackground), in: Circle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Gérer les catégories")
             }
             .padding(.vertical, 2)
         }
@@ -65,104 +98,64 @@ struct ListenView: View {
 
     private var goButton: some View {
         let color = Color(hex: cat.colorHex)
-        return VStack(spacing: 18) {
-            Button { go() } label: {
-                ZStack {
-                    Circle().stroke(color.opacity(0.25), lineWidth: 10).frame(width: 214, height: 214)
-                    Circle()
-                        .fill(RadialGradient(colors: [color.opacity(0.75), color], center: .topLeading, startRadius: 10, endRadius: 220))
-                        .frame(width: 190, height: 190)
-                        .shadow(color: color.opacity(0.45), radius: 22, y: 10)
-                    Text("GO")
-                        .font(.system(size: 58, weight: .heavy, design: .rounded))
-                        .foregroundStyle(Color(red: 0.02, green: 0.07, blue: 0.05))
-                }
+        return Button { go(continueId: nil) } label: {
+            ZStack {
+                Circle().stroke(color.opacity(0.25), lineWidth: 10).frame(width: 214, height: 214)
+                Circle()
+                    .fill(RadialGradient(colors: [color.opacity(0.75), color], center: .topLeading, startRadius: 10, endRadius: 220))
+                    .frame(width: 190, height: 190)
+                    .shadow(color: color.opacity(0.45), radius: 22, y: 10)
+                Text("GO")
+                    .font(.system(size: 58, weight: .heavy, design: .rounded))
+                    .foregroundStyle(Color(red: 0.02, green: 0.07, blue: 0.05))
             }
-            .buttonStyle(.plain)
-            .disabled(continueMode && continueId == nil)
-            destinationLine
         }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Lancer l'écoute dans \(cat.name)")
         .frame(maxWidth: .infinity)
         .padding(.vertical, 18)
     }
 
-    private var destinationLine: some View {
-        HStack(spacing: 6) {
-            Circle().fill(Color(hex: cat.colorHex)).frame(width: 8, height: 8)
-            Text(cat.name).fontWeight(.semibold)
-            Text("›").foregroundStyle(.secondary)
-            if continueMode, let id = continueId, let d = store.doc(id) {
-                Text("suite de « \(d.displayTitle) »").lineLimit(1)
-            } else {
-                Text("nouvel enregistrement · \(cat.kind.label)").foregroundStyle(.secondary).lineLimit(1)
-            }
-        }
-        .font(.subheadline)
-    }
-
-    private var keyWarning: some View {
-        HStack(alignment: .top, spacing: 10) {
-            Image(systemName: "key.fill").foregroundStyle(.orange)
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Clé API manquante").font(.subheadline.weight(.semibold))
-                Text("Sans elle, l'app garde seulement la transcription : pas de notes ni de résumé.")
-                    .font(.footnote).foregroundStyle(.secondary)
-                Button("Ajouter ma clé") { showSettings = true }.font(.footnote.weight(.semibold))
-            }
-        }
-        .card()
-    }
-
-    private var recordingCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Picker("", selection: $continueMode) {
-                Text("Nouvel enregistrement").tag(false)
-                Text("Continuer").tag(true)
-            }
-            .pickerStyle(.segmented)
-            if continueMode { continueList } else { sourceField }
-        }
-        .card()
-    }
-
     private var sourceField: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("Source").font(.subheadline.weight(.semibold))
-            TextField("ex. titre du livre, du podcast, de l'épisode…", text: $source)
-                .textFieldStyle(.roundedBorder)
-            Text("Facultatif : aide Claude à reconnaître les noms. Modèle de notes : \(cat.kind.label).")
-                .font(.caption).foregroundStyle(.secondary)
+        HStack(spacing: 10) {
+            Image(systemName: cat.kind.icon).foregroundStyle(Color(hex: cat.colorHex))
+            TextField("Titre (facultatif)", text: $source)
+                .submitLabel(.done)
+            if !source.isEmpty {
+                Button { source = "" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.tertiary) }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Effacer le titre")
+            }
         }
+        .padding(.horizontal, 14).padding(.vertical, 13)
+        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 
-    @ViewBuilder private var continueList: some View {
-        let list = store.docs(in: cat.id)
-        if list.isEmpty {
-            Text("Aucun enregistrement dans \(cat.name) pour l'instant.").font(.footnote).foregroundStyle(.secondary)
-        } else {
-            Text("Les nouvelles parties s'ajouteront à la suite.").font(.footnote).foregroundStyle(.secondary)
-            ForEach(list) { d in
-                Button { continueId = d.id } label: { ContinueRow(doc: d, selected: continueId == d.id) }
-                    .buttonStyle(.plain)
+    @ViewBuilder private var resumeSection: some View {
+        let list = Array(store.docs(in: cat.id).prefix(3))
+        if !list.isEmpty {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Reprendre").font(.title3.weight(.bold)).padding(.top, 8)
+                ForEach(list) { d in
+                    Button { go(continueId: d.id) } label: { ResumeRow(doc: d, color: Color(hex: cat.colorHex)) }
+                        .buttonStyle(.plain)
+                }
             }
         }
     }
 
-    private var backgroundCard: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Label("Écoute en arrière-plan", systemImage: "lock.iphone").font(.subheadline.weight(.semibold))
-            Text("Après GO, tu peux verrouiller l'iPhone ou lancer ton livre audio : l'app continue d'écouter sans couper la lecture. Les fichiers sont dans l'app Fichiers › Sur mon iPhone › Écoute.")
-                .font(.footnote).foregroundStyle(.secondary)
-        }
-        .card()
-    }
-
-    private func go() {
+    private func go(continueId: UUID?) {
         let src = source
         Task {
-            await engine.start(categoryId: cat.id, continueId: continueMode ? continueId : nil, source: src)
-            if engine.isLive { source = ""; continueMode = false; continueId = nil }
+            await engine.start(categoryId: cat.id, continueId: continueId, source: src)
+            if engine.isLive { source = "" }
         }
+    }
+
+    private func deleteCategory(_ c: Category) {
+        store.deleteCategory(c.id)
+        if settings.curCat == c.id { settings.curCat = store.cats.first?.id ?? "" }
+        deletingCat = nil
     }
 
     // MARK: Préparation
@@ -181,12 +174,8 @@ struct ListenView: View {
     @ViewBuilder private var live: some View {
         if let d = engine.doc {
             liveHeader(d)
-            SectionLabel(text: "Le résumé").padding(.top, 6).padding(.leading, 4)
+            Text("Résumé").font(.title3.weight(.bold)).padding(.top, 6)
             partsList(d)
-            Text(engine.state == .listening
-                 ? "Chaque sujet est résumé dès qu'il se termine. À l'arrêt, l'app rédige la synthèse et ouvre l'enregistrement complet."
-                 : "Rédaction des derniers résumés et de la synthèse. L'enregistrement complet va s'ouvrir.")
-                .font(.footnote).foregroundStyle(.secondary).padding(.horizontal, 4)
         }
     }
 
@@ -197,19 +186,19 @@ struct ListenView: View {
             HStack(spacing: 10) {
                 if finishing {
                     ProgressView()
-                    Text("Finalisation de l'enregistrement…").font(.headline)
+                    Text("Finalisation…").font(.headline)
                 } else {
                     PulseDot()
-                    Text("Écoute en cours").font(.headline)
+                    Text("En écoute").font(.headline)
                     Spacer()
                     if let s = engine.startedAt { LiveClock(start: s) }
                 }
             }
-            Text("\(d.source.isEmpty ? "" : d.source + " · ")\(c.name) · \(d.kind.label)")
+            Text("\(d.source.isEmpty ? "" : d.source + " · ")\(c.name)")
                 .font(.subheadline).foregroundStyle(.secondary)
             if engine.state == .listening { liveButtons }
             if !settings.hasKey {
-                Text("Sans clé API, seule la transcription est gardée.").font(.footnote).foregroundStyle(.orange)
+                Text("Sans clé API : transcription seule.").font(.footnote).foregroundStyle(.orange)
             } else if let p = engine.lastProblem {
                 Text(p).font(.footnote).foregroundStyle(.orange)
             }
@@ -252,22 +241,22 @@ struct LiveClock: View {
     }
 }
 
-struct ContinueRow: View {
+struct ResumeRow: View {
     let doc: Doc
-    let selected: Bool
+    let color: Color
     var body: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(doc.displayTitle).font(.subheadline.weight(.semibold)).lineLimit(2)
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(doc.displayTitle).font(.subheadline.weight(.semibold)).foregroundStyle(.primary).lineLimit(2).multilineTextAlignment(.leading)
                 Text("\(doc.parts.count) partie\(doc.parts.count > 1 ? "s" : "") · \(Fmt.relative(doc.updated))")
                     .font(.caption).foregroundStyle(.secondary)
             }
-            Spacer()
-            Image(systemName: selected ? "checkmark.circle.fill" : "circle")
-                .foregroundStyle(selected ? Color.accentColor : Color.secondary)
+            Spacer(minLength: 0)
+            Image(systemName: "play.circle.fill").font(.title).foregroundStyle(color)
         }
-        .padding(.vertical, 6)
+        .card()
         .contentShape(Rectangle())
+        .accessibilityLabel("Reprendre « \(doc.displayTitle) »")
     }
 }
 
@@ -280,28 +269,30 @@ struct PartSummaryCard: View {
         HStack(alignment: .top, spacing: 14) {
             NumberBadge(n: number)
             VStack(alignment: .leading, spacing: 8) {
-                Text("\(Fmt.time(part.start)) – \(Fmt.time(part.end ?? part.start))").font(.caption).foregroundStyle(.secondary)
                 Text(part.shownTitle).font(.headline)
                 if part.status == .summarizing {
-                    HStack(spacing: 8) { ProgressView().controlSize(.small); Text("Rédaction du résumé…").font(.footnote).foregroundStyle(.secondary) }
+                    HStack(spacing: 8) { ProgressView().controlSize(.small); Text("Rédaction…").font(.footnote).foregroundStyle(.secondary) }
                 } else if let w = part.writeup {
                     if !w.chapeau.isEmpty { Text(w.chapeau).font(.subheadline.weight(.medium)) }
-                    ForEach(Array(w.aRetenir.enumerated()), id: \.offset) { _, x in
-                        HStack(alignment: .firstTextBaseline, spacing: 8) { Text("•"); Text(x).font(.subheadline) }
-                    }
-                    if !w.compteRendu.isEmpty {
-                        DisclosureGroup("Lire le compte rendu", isExpanded: $expanded) {
+                    if !w.aRetenir.isEmpty { BulletList(items: w.aRetenir, font: .subheadline) }
+                    if !w.shownSections.isEmpty {
+                        DisclosureGroup("Détail", isExpanded: $expanded) {
                             VStack(alignment: .leading, spacing: 10) {
-                                ForEach(Array(w.compteRendu.enumerated()), id: \.offset) { _, para in Text(para).font(.subheadline) }
+                                ForEach(Array(w.shownSections.enumerated()), id: \.offset) { _, s in
+                                    VStack(alignment: .leading, spacing: 3) {
+                                        Text(s.intertitre).font(.subheadline.weight(.semibold))
+                                        Text(s.texte).font(.subheadline)
+                                    }
+                                }
                             }
                             .padding(.top, 6)
                         }
                         .font(.footnote)
                     }
                 } else {
-                    Text("Résumé non rédigé\(part.error.map { " (\($0))" } ?? "") : il pourra être relancé depuis l'enregistrement.")
-                        .font(.footnote).foregroundStyle(.secondary)
+                    Text("Résumé non rédigé").font(.footnote).foregroundStyle(.orange)
                 }
+                Text("\(Fmt.time(part.start)) – \(Fmt.time(part.end ?? part.start))").font(.caption).foregroundStyle(.tertiary)
             }
         }
         .card()
@@ -319,8 +310,6 @@ struct CurrentPartCard: View {
                 Text(part.segments.first.map { "depuis \(Fmt.time($0.t))" } ?? "en attente de parole").font(.caption).foregroundStyle(.secondary)
                 Text(part.label.nonEmpty ?? (part.segments.isEmpty ? "À l'écoute…" : "Sujet en cours…")).font(.headline)
                 ListeningBars()
-                Text(hasKey ? "Le résumé de ce sujet sera rédigé dès qu'il se termine." : "Transcription en cours.")
-                    .font(.footnote).foregroundStyle(.secondary)
             }
         }
         .card(dashed: true)

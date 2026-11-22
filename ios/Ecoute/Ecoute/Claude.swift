@@ -101,32 +101,34 @@ enum Prompts {
         "definitions": "\"definitions\":[{\"terme\":\"…\",\"definition\":\"…\"}]"
     ]
 
-    /// Étage 2 : le compte rendu d'une partie, rédigé à partir des notes (pas de la transcription brute).
+    /// Étage 2 : la fiche d'une partie, rédigée à partir des notes (pas de la transcription brute).
+    /// Format court et structuré : chapeau, points essentiels, puis 2 à 5 sections avec intertitres.
     static func writeUp(doc: Doc, part: Part) -> (prompt: String, maxTokens: Int)? {
         let material = part.notes.isEmpty ? part.clean.map(\.text).joined(separator: "\n") : part.notes.map { "- " + $0.text }.joined(separator: "\n")
         guard !material.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
         let units = part.notes.isEmpty ? max(1, material.wordCount / 35) : part.notes.count
-        let target = min(1500, max(120, units * 30))
+        let target = min(450, max(80, units * 12))
         let quotes = part.quotes.map { "- « \($0.texte) »" + ($0.auteur.isEmpty ? "" : " — \($0.auteur)") }.joined(separator: "\n")
         let refs = part.refs.map { "- \($0.nom)" + ($0.type.isEmpty ? "" : " (\($0.type))") + ($0.contexte.isEmpty ? "" : " : \($0.contexte)") }.joined(separator: "\n")
-        let fields = doc.kind.fields.compactMap { fieldSpec[$0] }.joined(separator: ",")
+        let fields = doc.kind.fields.filter { $0 != "a_retenir" }.compactMap { fieldSpec[$0] }.joined(separator: ",")
         let prompt = """
-        Tu es un excellent rédacteur de comptes rendus. Voici les notes prises en direct pendant l'écoute d'un passage d'un contenu de type « \(doc.kind.label) »\(sourceText(doc))\(part.label.isEmpty ? "" : ", sur le sujet « \(part.label) »").
+        Tu rédiges des fiches claires et faciles à relire. Voici les notes prises en direct pendant l'écoute d'un passage d'un contenu de type « \(doc.kind.label) »\(sourceText(doc))\(part.label.isEmpty ? "" : ", sur le sujet « \(part.label) »").
 
-        Rédige le compte rendu de ce passage :
-        - en prose fluide, au présent, en paragraphes (un par idée ou étape du raisonnement), sans listes ;
-        - en conservant tous les éléments concrets des notes : chiffres, dates, noms, exemples, anecdotes, enchaînement des arguments. Ne résume pas à l'excès : vise environ \(target) mots, davantage si les notes sont denses ;
-        - en attribuant les propos \(doc.kind.who) ;
-        - sans rien inventer ni ajouter d'information absente des notes ; omets ce qui est confus plutôt que de deviner.
+        Rédige la fiche de ce passage :
+        - "chapeau" : 1 à 2 phrases qui disent l'essentiel ;
+        - "a_retenir" : 3 à 5 points essentiels, une phrase courte chacun ;
+        - "sections" : le développement, découpé en 2 à 5 sections dans l'ordre du passage. Chaque section a un intertitre court (5 mots max) et un paragraphe de 2 à 4 phrases. Garde les éléments concrets utiles (chiffres, noms, exemples), mais va à l'essentiel : environ \(target) mots au total, pas plus ;
+        - attribue les propos \(doc.kind.who) ;
+        - n'invente rien et n'ajoute aucune information absente des notes ; omets ce qui est confus plutôt que de deviner.
         Écris dans la langue des notes. Réponds UNIQUEMENT avec un objet JSON valide :
-        {"titre":"titre précis du passage (8 mots max)","chapeau":"1 à 2 phrases qui disent l'essentiel","compte_rendu":["paragraphe 1","paragraphe 2","…"],\(fields),"mots_cles":["4 à 8 mots-clés"]}
+        {"titre":"titre précis du passage (8 mots max)","chapeau":"…","a_retenir":["…"],"sections":[{"intertitre":"…","texte":"…"}],\(fields),"mots_cles":["4 à 8 mots-clés"]}
         Laisse une liste vide quand il n'y a rien.
 
         Notes :
         \(material)
         \(quotes.isEmpty ? "" : "\nCitations relevées :\n" + quotes + "\n")\(refs.isEmpty ? "" : "\nRéférences mentionnées :\n" + refs + "\n")
         """
-        return (prompt, min(8000, 1500 + target * 3))
+        return (prompt, min(4000, 1500 + target * 3))
     }
 
     static func parseWriteup(_ r: [String: Any], fallbackTitle: String) -> Writeup {
@@ -143,22 +145,32 @@ enum Prompts {
         w.actions = jObjs(r["actions"], "quoi").map { ActionItem(qui: jStr($0["qui"]), quoi: jStr($0["quoi"]), quand: jStr($0["quand"])) }
         w.definitions = jObjs(r["definitions"], "terme").map { Definition(terme: jStr($0["terme"]), definition: jStr($0["definition"])) }
         w.motsCles = jStrs(r["mots_cles"])
+        let secs = jObjs(r["sections"], "texte").map { WSection(intertitre: jStr($0["intertitre"]), texte: jStr($0["texte"])) }
+        if !secs.isEmpty { w.sections = secs }
         return w
     }
 
-    /// Étage 3 : la synthèse de tout l'enregistrement.
+    /// Étage 3 : la synthèse de tout l'enregistrement, avec les leçons et les pistes.
     static func synthesis(doc: Doc) -> String? {
         let parts = doc.parts.enumerated().filter { $0.element.writeup != nil }
         guard !parts.isEmpty else { return nil }
         let body = parts.map { item -> String in
             let w = item.element.writeup!
-            return "Partie \(item.offset + 1) — \(w.titre)\n\(w.chapeau)\n" + w.aRetenir.map { "- " + $0 }.joined(separator: "\n")
+            let secs = w.shownSections.map { "  · \($0.intertitre) : \($0.texte)" }.joined(separator: "\n")
+            return "Partie \(item.offset + 1) — \(w.titre)\n\(w.chapeau)\n" + w.aRetenir.map { "- " + $0 }.joined(separator: "\n") + (secs.isEmpty ? "" : "\n" + secs)
         }.joined(separator: "\n\n")
+        let lessons = doc.kind == .reunion
+            ? "\"lecons\":[]"
+            : "\"lecons\":[{\"lecon\":\"une leçon ou idée clé à garder, en une phrase\",\"application\":\"comment l'appliquer concrètement, en une phrase\"}]"
         return """
-        Voici le découpage en parties d'un contenu de type « \(doc.kind.label) »\(sourceText(doc)), avec pour chaque partie son titre, son chapeau et ses points essentiels.
-        Écris la synthèse de l'ensemble : ce dont il est question, le fil conducteur et les idées les plus importantes. N'invente rien. Écris dans la langue des parties.
-        Réponds UNIQUEMENT avec un objet JSON valide :
-        {"titre":"titre de l'enregistrement (10 mots max)","synthese":["1 à 3 paragraphes"],"a_retenir":["5 à 8 points essentiels de l'ensemble"]}
+        Voici les fiches des parties d'un contenu de type « \(doc.kind.label) »\(sourceText(doc)) : titre, chapeau, points essentiels et développement.
+        Rédige la synthèse de l'ensemble, courte et utile :
+        - "synthese" : un seul paragraphe de 80 mots maximum : de quoi il est question et le fil conducteur ;
+        - "a_retenir" : les 5 à 8 idées les plus importantes de tout le contenu, une phrase courte chacune ;
+        - "lecons" : 3 à 6 leçons à garder, chacune avec sa mise en pratique (liste vide si le contenu ne s'y prête pas) ;
+        - "pour_aller_plus_loin" : 2 à 4 questions ou pistes pour creuser le sujet.
+        N'invente rien. Écris dans la langue des parties. Réponds UNIQUEMENT avec un objet JSON valide :
+        {"titre":"titre de l'enregistrement (10 mots max)","synthese":["…"],"a_retenir":["…"],\(lessons),"pour_aller_plus_loin":["…"]}
 
         \(body)
         """
@@ -166,6 +178,8 @@ enum Prompts {
 
     static func parseSynthesis(_ r: [String: Any]) -> Synthesis {
         let syn: [String] = (r["synthese"] as? [Any]).map { jStrs($0) } ?? [jStr(r["synthese"])].filter { !$0.isEmpty }
-        return Synthesis(titre: jStr(r["titre"]), synthese: syn, aRetenir: jStrs(r["a_retenir"]))
+        let lecons = jObjs(r["lecons"], "lecon").map { Lesson(lecon: jStr($0["lecon"]), application: jStr($0["application"])) }
+        return Synthesis(titre: jStr(r["titre"]), synthese: syn, aRetenir: jStrs(r["a_retenir"]),
+                         lecons: lecons, plusLoin: jStrs(r["pour_aller_plus_loin"]))
     }
 }

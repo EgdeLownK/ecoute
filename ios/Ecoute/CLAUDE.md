@@ -23,10 +23,10 @@ Propriétaire : Killian, non-développeur. Il valide sur iPhone via TestFlight e
 | `Models.swift` | `ContentKind` (podcast, livre, réunion, cours, idées), `Category`, `Doc`, `Part`, `Writeup`, `Synthesis`. |
 | `Store.swift` | Sauvegarde JSON (Application Support), `Settings` (UserDefaults) et `Keychain` (clé API). |
 | `Files.swift` | Écriture des fichiers Markdown dans Documents, visibles dans l'app Fichiers. |
-| `ListenView.swift` | Onglet **Écoute** : écran d'accueil (catégorie, GO, nouvelle écoute ou reprise) et vue « direct » où le compte rendu se construit. |
-| `LibraryView.swift` | Onglet **Enregistrements** : filtres par catégorie, recherche, liste. |
-| `DocView.swift` | Lecture d'un enregistrement : synthèse, sommaire, parties, export, suppression, reprise de l'écoute. |
-| `SettingsView.swift` | Clé API, modèles, intervalle des notes, découpage par sujet, langue, catégories. |
+| `ListenView.swift` | Onglet **Écoute** : catégories (+ pour ajouter, réglette pour gérer, appui long pour modifier/supprimer), GO, titre facultatif, « Reprendre » (3 dernières écoutes de la catégorie, un tap = reprise). Puis vue « direct » où le résumé se construit. |
+| `LibraryView.swift` | Onglet **Bibliothèque** : catégories en tuiles, récents, « Idées à retenir », recherche dans tout le contenu (titres, idées, leçons). Navigation par `LibRoute` (catégorie, enregistrement, partie). |
+| `DocView.swift` | Page d'un enregistrement avec onglets **Résumé / À retenir / Leçons (ou Décisions) / Citations**, et `PartView` : une page par partie (précédente/suivante). Actions dans le menu ⋯. |
+| `SettingsView.swift` | Réglages, `CategoriesList` (ajouter, modifier, corbeille visible) et `CategoryEditor`. |
 | `Components.swift` | Composants partagés : `.card()`, `CategoryChip`, `PulseDot`, `ListeningBars`, `WriteupView`, `BannerView`, `ShareSheet`, `Color(hex:)`. |
 
 ## Le parcours d'une écoute
@@ -35,17 +35,22 @@ Propriétaire : Killian, non-développeur. Il valide sur iPhone via TestFlight e
 2. Toutes les ~60 s (`chunkSeconds`, ou dès 320 mots), le morceau part chez **Claude Haiku** (`modelNotes`).
    Claude renvoie du texte nettoyé, des notes détaillées, des citations, des références et `nouveau_sujet`.
 3. Quand le sujet change (ou au bouton « Nouvelle partie »), la partie est rédigée par **Claude Sonnet** (`modelWrite`)
-   à partir de ses notes : titre, chapeau, compte rendu, à retenir, citations, références, définitions, etc.
-   Longueur visée : environ 30 mots par note, entre 120 et 1 500 mots.
-4. À l'arrêt, une synthèse globale est rédigée, puis les fichiers sont écrits et le document s'ouvre.
+   à partir de ses notes, en **fiche courte et structurée** : titre, chapeau, à retenir (3-5 points),
+   `sections` (2 à 5 intertitres + paragraphe de 2-4 phrases, ~12 mots par note, 80 à 450 mots), puis rubriques.
+4. À l'arrêt, une synthèse est rédigée : paragraphe court (80 mots max), à retenir (5-8), **leçons** avec mise en pratique,
+   pistes pour aller plus loin. Puis les fichiers sont écrits et le document s'ouvre.
 
 ## Décisions prises (ne pas défaire sans demander)
 
 - **La qualité du document final passe avant la vitesse.** Pas de flux de texte en continu à l'écran : on montre le résumé qui se construit.
 - **Notes prises en direct toutes les ~60 s**, pour ne pas perdre de détails. Pas de résumé unique à la fin.
-- **Un enregistrement = un dossier** : `00 - Sommaire.md` (léger) + **un fichier par partie**. Jamais un gros fichier unique.
-- Format : **compte rendu rédigé**, pas une liste de puces brutes.
-- **2 onglets** seulement : Écoute et Enregistrements. Les réglages sont derrière ⚙️.
+- **Un enregistrement = un dossier** : `00 - Sommaire.md` (synthèse + liens), fiches thématiques numérotées
+  (`À retenir`, `Leçons` ou `Décisions et actions`, `Citations et références`, `Glossaire`, seulement s'il y a de la matière)
+  et un sous-dossier `Parties/` avec **un fichier par partie**. Jamais un gros fichier unique.
+- Format (choix de Killian, 22/11) : **court, organisé, structuré**. Fiches avec intertitres plutôt qu'un long compte rendu en prose.
+- **L'interface s'explique d'elle-même** : pas d'encadrés ni de phrases d'explication. Icônes, libellés courts, états clairs.
+- La bibliothèque doit donner l'impression d'une **bibliothèque de connaissances** (idées, leçons), pas d'une liste d'enregistrements.
+- **2 onglets** seulement : Écoute et Bibliothèque. Les réglages sont derrière ⚙️.
 - **Claude est obligatoire** (clé API de Killian, stockée dans le trousseau). Pas de compte ni de mot de passe dans l'app.
 - La transcription reste **sur l'iPhone**. Seul le texte part chez Claude, jamais l'audio.
 - L'écoute doit continuer **écran verrouillé et dans une autre app**, sans couper le son en cours :

@@ -17,6 +17,17 @@ enum ContentKind: String, Codable, CaseIterable, Identifiable {
         }
     }
 
+    /// Icône SF Symbols du type.
+    var icon: String {
+        switch self {
+        case .podcast: return "waveform"
+        case .livre: return "book.fill"
+        case .reunion: return "person.2.fill"
+        case .cours: return "graduationcap.fill"
+        case .idees: return "lightbulb.fill"
+        }
+    }
+
     /// À qui attribuer les propos.
     var who: String {
         switch self {
@@ -106,6 +117,18 @@ struct Definition: Codable, Hashable {
     var definition: String
 }
 
+/// Une section du développement d'une partie : un intertitre et un court paragraphe.
+struct WSection: Codable, Hashable {
+    var intertitre: String
+    var texte: String
+}
+
+/// Une leçon tirée de l'écoute, avec la façon de l'appliquer.
+struct Lesson: Codable, Hashable {
+    var lecon: String
+    var application: String
+}
+
 /// Compte rendu rédigé d'une partie.
 struct Writeup: Codable, Hashable {
     var titre = ""
@@ -119,12 +142,17 @@ struct Writeup: Codable, Hashable {
     var actions: [ActionItem] = []
     var definitions: [Definition] = []
     var motsCles: [String] = []
+    var sections: [WSection]? = nil   // nouveau format : développement en sections courtes (nil pour les anciens comptes rendus)
+
+    var shownSections: [WSection] { sections ?? [] }
 }
 
 struct Synthesis: Codable, Hashable {
     var titre: String
     var synthese: [String]
     var aRetenir: [String]
+    var lecons: [Lesson]? = nil
+    var plusLoin: [String]? = nil
 }
 
 enum PartStatus: String, Codable {
@@ -180,6 +208,58 @@ struct Doc: Codable, Identifiable, Hashable {
     var snippet: String {
         synthesis?.synthese.first ?? parts.first(where: { $0.writeup?.chapeau.nonEmpty != nil })?.writeup?.chapeau ?? ""
     }
+}
+
+// MARK: - Contenu regroupé d'un enregistrement (bibliothèque, onglets, fichiers thématiques)
+
+extension Doc {
+    /// Les points essentiels de tout l'enregistrement (synthèse, sinon ceux des parties).
+    var highlights: [String] {
+        let g = synthesis?.aRetenir ?? []
+        return g.isEmpty ? parts.flatMap { $0.writeup?.aRetenir ?? [] } : g
+    }
+    var hasKeyPoints: Bool { !(synthesis?.aRetenir ?? []).isEmpty || parts.contains { !($0.writeup?.aRetenir ?? []).isEmpty } }
+    var lessons: [Lesson] { synthesis?.lecons ?? [] }
+    var furtherQuestions: [String] { uniq((synthesis?.plusLoin ?? []) + parts.flatMap { $0.writeup?.questions ?? [] }) }
+    var allDecisions: [String] { uniq(parts.flatMap { $0.writeup?.decisions ?? [] }) }
+    var allActions: [ActionItem] { parts.flatMap { $0.writeup?.actions ?? [] } }
+    var allQuotes: [Quote] {
+        parts.flatMap { p -> [Quote] in
+            if let w = p.writeup, !w.citations.isEmpty { return w.citations }
+            return p.quotes
+        }
+    }
+    var allRefs: [Reference] {
+        var out: [Reference] = []
+        for p in parts {
+            let list = (p.writeup?.references.isEmpty == false) ? p.writeup!.references : p.refs
+            for r in list where !out.contains(where: { $0.nom.lowercased() == r.nom.lowercased() }) { out.append(r) }
+        }
+        return out
+    }
+    var allDefinitions: [Definition] {
+        var out: [Definition] = []
+        for d in parts.flatMap({ $0.writeup?.definitions ?? [] }) where !out.contains(where: { $0.terme.lowercased() == d.terme.lowercased() }) {
+            out.append(d)
+        }
+        return out
+    }
+    /// Tout le texte utile pour la recherche.
+    var searchText: String {
+        var bits = [displayTitle, source] + highlights + lessons.map { $0.lecon + " " + $0.application }
+        for p in parts {
+            bits.append(p.shownTitle)
+            if let w = p.writeup { bits.append(w.chapeau); bits += w.motsCles }
+        }
+        return bits.joined(separator: " ").lowercased()
+    }
+}
+
+/// Retire les doublons en gardant l'ordre.
+func uniq(_ items: [String]) -> [String] {
+    var seen = Set<String>(), out: [String] = []
+    for x in items where seen.insert(x.lowercased()).inserted { out.append(x) }
+    return out
 }
 
 extension String {
